@@ -1,5 +1,7 @@
 {
   "functions": {
-    "api/kbo.js": { "maxDuration": 10 }
+    "api/kbo.js": {
+      "maxDuration": 10
+    }
   }
 }
