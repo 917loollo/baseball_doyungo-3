@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b55ad">
+<title>KBO LIVE</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f5f8;color:#172033;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Segoe UI",sans-serif}
+button{font:inherit;cursor:pointer} .top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid #e4e7ec}
+.topin{max-width:1100px;margin:auto;padding:12px 15px 0}.brand{height:38px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:21px;font-weight:950;letter-spacing:-.6px}.logo b{display:inline-grid;place-items:center;width:30px;height:30px;margin-right:8px;border-radius:9px;background:#0b55ad;color:#fff;font-size:16px}
+.live{font-size:11px;font-weight:900;color:#0b55ad;background:#edf5ff;padding:7px 10px;border-radius:99px}
+.nav{display:flex;gap:4px;margin-top:10px}.nav button{border:0;background:0;padding:11px 16px;color:#667085;font-weight:900;border-bottom:3px solid transparent}.nav .on{color:#0b55ad;border-color:#0b55ad}
+main{max-width:1100px;margin:auto;padding:18px 15px 45px}.title{font-size:25px;font-weight:950;margin:3px 0}.sub{font-size:12px;color:#667085;margin:5px 0 15px}
+.bar{display:flex;justify-content:space-between;align-items:end;gap:10px}.refresh{border:1px solid #d8dde5;background:#fff;border-radius:10px;padding:8px 11px;font-weight:900}
+.count{font-size:13px;font-weight:900;color:#475467;margin:0 0 9px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:#fff;border:1px solid #e4e7ec;border-radius:17px;box-shadow:0 5px 20px #1018280b;overflow:hidden}.game{cursor:pointer}.game:hover{transform:translateY(-1px)}
+.gh{display:flex;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #eef0f3;color:#667085;font-size:11px}.badge{font-weight:900;border-radius:6px;padding:4px 7px}.liveb{background:#ef4444;color:#fff}.endb{background:#eef1f4}.preb{background:#edf5ff;color:#0b55ad}
+.gbody{padding:16px}.match{display:grid;grid-template-columns:1fr 95px 1fr;align-items:center;text-align:center;gap:8px}.team{min-width:0}.crest{width:45px;height:45px;margin:auto;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:950}.tn{font-size:14px;font-weight:950;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sc{font-size:30px;font-weight:950;margin-top:4px}.mid{font-size:11px;color:#667085;font-weight:900;line-height:1.6}.stad{font-size:10px;color:#98a2b3;text-align:center;margin-top:10px}
+.empty,.err{padding:35px;text-align:center;color:#667085}.err{color:#b42318}.rank{width:100%;border-collapse:collapse;min-width:600px}.rank th,.rank td{padding:11px 8px;border-bottom:1px solid #edf0f3;text-align:center;font-size:12px}.rank th{background:#f8fafc;color:#667085}.rank th:nth-child(2),.rank td:nth-child(2){text-align:left}.rank td b{font-weight:950}
+.detail{display:none}.back{border:0;background:0;font-weight:950;padding:0 0 12px;color:#344054}.score{background:linear-gradient(150deg,#0b5cbd,#062e63);color:#fff;border-radius:19px;padding:19px 15px}.score .small{text-align:center;color:#dbeafe;font-size:11px}.big{display:grid;grid-template-columns:1fr 110px 1fr;align-items:center;text-align:center;gap:8px;margin-top:11px}.big .tn{font-size:16px}.big .sc{font-size:40px}.center{font-size:11px;color:#dbeafe;font-weight:900}.detailgrid{display:grid;grid-template-columns:1.6fr .9fr;gap:12px;margin-top:12px}.panel{background:#fff;border:1px solid #e4e7ec;border-radius:16px;overflow:hidden;margin-bottom:12px}.pt{font-size:14px;font-weight:950;padding:13px 14px;border-bottom:1px solid #edf0f3}.pb{padding:13px}.scroll{overflow:auto}.inning{width:100%;min-width:540px;border-collapse:collapse}.inning th,.inning td{padding:8px 6px;border-bottom:1px solid #edf0f3;text-align:center;font-size:11px}.inning th{background:#f8fafc;color:#667085}.inning th:first-child,.inning td:first-child{text-align:left;font-weight:900}.rheb{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.rh{background:#f7f9fb;border-radius:10px;padding:9px 3px;text-align:center}.rh b{display:block;font-size:17px}.rh span{font-size:9px;color:#667085}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:10px}.info{font-size:12px;line-height:1.65}.info b{font-weight:950}.diamondbox{text-align:center}.diamond{position:relative;width:155px;height:155px;margin:2px auto}.base{position:absolute;width:36px;height:36px;background:#e9edf2;border:2px solid #b9c1cc;transform:rotate(45deg);border-radius:4px}.base.on{background:#ffd66b;border-color:#d89e00}.b1{right:10px;top:60px}.b2{left:59px;top:10px}.b3{left:10px;top:60px}.hb{position:absolute;left:59px;bottom:10px;width:36px;height:36px;border:2px solid #b9c1cc;background:#fff;transform:rotate(45deg)}.dl{position:absolute;inset:0;display:grid;place-items:center;color:#98a2b3;font-size:9px;font-weight:900}.countrow{text-align:center;font-size:12px;font-weight:900;word-spacing:9px}.plays div{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #eef0f3;font-size:11px;line-height:1.45}.plays i{font-style:normal;color:#98a2b3;min-width:27px}.lineups{display:grid;grid-template-columns:1fr 1fr;gap:12px}.player{display:grid;grid-template-columns:25px 1fr auto;gap:5px;padding:7px 0;border-bottom:1px solid #eef0f3;font-size:11px}.player small{color:#667085}.pitchers{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pitcher{background:#f7f9fb;border-radius:10px;padding:10px}.pitcher b{font-size:12px}.pitcher div{font-size:10px;color:#667085;margin-top:4px;line-height:1.5}
+@media(max-width:760px){main{padding:14px 10px 35px}.grid{grid-template-columns:1fr}.detailgrid{grid-template-columns:1fr}.big{grid-template-columns:1fr 80px 1fr}.big .sc{font-size:34px}.lineups,.twocol,.pitchers{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin">
+<div class="brand"><div class="logo"><b>⚾</b>KBO LIVE</div><span class="live">● LIVE DATA</span></div>
+<nav class="nav"><button id="gamesTab" class="on">오늘 경기</button><button id="rankTab">순위</button></nav>
+</div></header>
+
+<main>
+<section id="home">
+<div class="bar"><div><h1 class="title">오늘의 KBO</h1><p class="sub" id="date">불러오는 중…</p></div><button class="refresh" onclick="loadGames()">↻ 새로고침</button></div>
+<div id="games"></div>
+</section>
+
+<section id="ranking" style="display:none">
+<h1 class="title">KBO 순위</h1><p class="sub">2026 시즌</p>
+<div class="card" style="overflow:auto"><table class="rank"><thead><tr><th>순위</th><th>팀</th><th>경기</th><th>승</th><th>패</th><th>무</th><th>게임차</th><th>승률</th></tr></thead><tbody id="rankbody"><tr><td colspan="8" class="empty">불러오는 중…</td></tr></tbody></table></div>
+</section>
+
+<section id="detail" class="detail"></section>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const A=x=>Array.isArray(x)?x:(x&&typeof x==='object'?Object.values(x):[]);
+const V=(o,...ks)=>{for(const k of ks)if(o&&o[k]!==undefined&&o[k]!==null&&o[k]!=='')return o[k];return null};
+const api=async p=>{
+  const url='/api/kbo?path='+encodeURIComponent(p);
+  const r=await fetch(url,{cache:'no-store'});
+  const t=await r.text(); let j;
+  try{j=JSON.parse(t)}catch{throw Error('API 응답을 읽을 수 없습니다')}
+  if(!r.ok)throw Error(j.error||('API '+r.status));
+  return j.result??j;
+};
+const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const colors={'LG':'#c60c30','두산':'#15133a','삼성':'#074ca1','SSG':'#ce0e2d','KT':'#111','한화':'#ff6600','롯데':'#062a55','KIA':'#ea0029','NC':'#315288','키움':'#570514'};
+const short=n=>String(n||'').replace(/ 트윈스| 베어스| 라이온즈| 랜더스| 위즈| 이글스| 자이언츠| 타이거즈| 다이노스| 히어로즈/g,'');
+function crest(n){let s=short(n),c=colors[s]||'#667085';return `<div class="crest" style="background:${c}">${esc(s.slice(0,3))}</div>`}
+function score(g,s){return V(g,s+'TeamScore',s+'Score',s+'ScoreValue')??'-'}
+function status(g){let x=String(V(g,'statusCode','status','gameStatus')||'').toUpperCase();if(/RESULT|END|FINAL|FINISH/.test(x))return ['end','경기 종료'];if(/START|LIVE|ING/.test(x))return ['live','LIVE'];return ['pre','경기 예정']}
+function valid(g){let a=V(g,'awayTeamName','awayName'),h=V(g,'homeTeamName','homeName');return g?.gameId&&a&&h&&a!=='-'&&h!=='-'&&V(g,'categoryId')==='kbo'}
+function unique(a){let m=new Map();A(a).forEach(g=>{if(valid(g))m.set(String(g.gameId),g)});return [...m.values()]}
+function gameCard(g){let [k,l]=status(g),a=V(g,'awayTeamName'),h=V(g,'homeTeamName'),ing=V(g,'currentInning'),time=V(g,'gameDateTime','startTime','gameTime')||'',stad=V(g,'stadium','stadiumName')||'';return `<article class="card game" onclick="detail('${esc(g.gameId)}')"><div class="gh"><span>${esc(time)}</span><span class="badge ${k==='live'?'liveb':k==='end'?'endb':'preb'}">${k==='live'?'● ':''}${l}</span></div><div class="gbody"><div class="match"><div class="team">${crest(a)}<div class="tn">${esc(a)}</div><div class="sc">${esc(score(g,'away'))}</div></div><div class="mid">${esc(ing?ing+'회':'')}<br>${k==='pre'?'VS':k==='end'?'종료':'경기 중'}</div><div class="team">${crest(h)}<div class="tn">${esc(h)}</div><div class="sc">${esc(score(g,'home'))}</div></div></div><div class="stad">${esc(stad)}</div></div></article>`}
+async function loadGames(){
+ let d=today();$('#date').textContent=d.replaceAll('-','.')+' · 5초 자동 갱신';
+ try{let r=await api(`/schedule/games?upperCategoryId=kbaseball&fromDate=${d}&toDate=${d}`);let gs=unique(r.games||r.scheduleGames||r);$('#games').innerHTML=gs.length?`<div class="count">${gs.length}경기</div><div class="grid">${gs.map(gameCard).join('')}</div>`:'<div class="card empty">오늘 등록된 KBO 경기가 없습니다.</div>'}
+ catch(e){$('#games').innerHTML=`<div class="card err">경기 데이터를 불러오지 못했습니다.<br><small>${esc(e.message)}<br>브라우저에서 네이버 API 직접 호출이 차단되면 단일 HTML 방식으로는 실시간 데이터를 받을 수 없습니다.</small></div>`}
+}
+async function loadRank(){
+ try{let r=await api('/statistics/categories/kbo/seasons/2026/teams');let a=A(r.seasonTeamStats||r.teams||r.teamStats||r);$('#rankbody').innerHTML=a.length?a.map((x,i)=>`<tr><td><b>${esc(V(x,'ranking','rank','rankNo')??i+1)}</b></td><td><b>${esc(V(x,'teamName','name')||'-')}</b></td><td>${esc(V(x,'gameCount','games')??'-')}</td><td>${esc(V(x,'winGameCount','wins','winCount')??'-')}</td><td>${esc(V(x,'loseGameCount','losses','loseCount')??'-')}</td><td>${esc(V(x,'drawnGameCount','draws','drawCount')??'-')}</td><td>${esc(V(x,'gameBehind','gamesBehind','gameDifference')??'-')}</td><td>${esc(V(x,'wra','winRate','winningRate')??'-')}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">순위 데이터가 없습니다.</td></tr>'}catch(e){$('#rankbody').innerHTML=`<tr><td colspan="8" class="err">${esc(e.message)}</td></tr>`}
+}
+function inningVals(x,side){x=V(x,'inningScore','inningScores')||{};x=x[side]??x[side+'Score']??x;if(Array.isArray(x))return x.map(v=>typeof v==='object'?V(v,'score','value','run','r'):v);if(x&&typeof x==='object')return Object.keys(x).sort((a,b)=>+a-+b).map(k=>typeof x[k]==='object'?V(x[k],'score','value','run','r'):x[k]);return []}
+function stat(g,relay,s){let p=s==='away'?'away':'home',c=relay.currentGameState||{};return {r:V(g,p+'TeamScore',p+'Score')??V(c,p+'Score'),h:V(g,p+'TeamRheb',p+'Hit',p+'Hits')??V(c,p+'Hit',p+'Hits'),e:V(g,p+'Error',p+'Errors')??V(c,p+'Error',p+'Errors'),b:V(g,p+'BallFour',p+'Walks',p+'BB')??V(c,p+'BallFour',p+'Walks',p+'BB')}}
+function inningTable(relay,g){let av=inningVals(relay,'away'),ho=inningVals(relay,'home'),n=Math.max(9,av.length,ho.length),a=stat(g,relay,'away'),h=stat(g,relay,'home');let head='<th>팀</th>'+Array.from({length:n},(_,i)=>`<th>${i+1}</th>`).join('')+'<th>R</th><th>H</th><th>E</th>';let row=(n,v,s)=>`<tr><td>${esc(n)}</td>${Array.from({length:n},(_,i)=>`<td>${esc(v[i]??'-')}</td>`).join('')}<td>${esc(s.r??'-')}</td><td>${esc(s.h??'-')}</td><td>${esc(s.e??'-')}</td></tr>`;return `<div class="scroll"><table class="inning"><thead><tr>${head}</tr></thead><tbody>${row(V(g,'awayTeamName'),av,a)}${row(V(g,'homeTeamName'),ho,h)}</tbody></table></div>`}
+function find(list,id){return A(list).find(x=>String(V(x,'playerId','id','batterId','pitcherId','code'))===String(id))}
+function name(x){return V(x,'name','playerName','batterName','pitcherName')||'-'}
+function plays(r){let out=[],seen=new Set();A(V(r,'textRelays','relays')).forEach(z=>{let t=A(V(z,'textOptions','options','texts')).map(o=>V(o,'text','textValue','content')).filter(Boolean).join(' ');if(t&&!seen.has(t)){seen.add(t);out.push([V(z,'no','seq','sequence'),t])}});out.sort((a,b)=>+(b[0]||0)-+(a[0]||0));return out.slice(0,25).map(x=>`<div><i>${esc(x[0]??'')}</i><span>${esc(x[1])}</span></div>`).join('')||'<div class="empty">중계 기록이 없습니다.</div>'}
+function lineup(list){let a=A(list);return a.length?a.slice(0,12).map((p,i)=>`<div class="player"><span>${esc(V(p,'batOrder','order','no')??i+1)}</span><b>${esc(name(p))}</b><small>${esc(V(p,'posName','position','pos')||'')} ${V(p,'ab')!==null?esc(p.ab)+'타수 ':''}${V(p,'hit')!==null?esc(p.hit)+'안타':''}</small></div>`).join(''):'<div class="empty">라인업 없음</div>'}
+function bases(c){let on=k=>String(V(c,k)||'0')!=='0'&&String(V(c,k)||'')!=='';return `<div class="diamondbox"><div class="diamond"><div class="base b1 ${on('base1')?'on':''}"></div><div class="base b2 ${on('base2')?'on':''}"></div><div class="base b3 ${on('base3')?'on':''}"></div><div class="hb"></div><div class="dl">BASE</div></div><div class="countrow">B ${esc(V(c,'ball')??'-')} · S ${esc(V(c,'strike')??'-')} · O ${esc(V(c,'out')??'-')}</div></div>`}
+async function detail(id){
+ $('#home').style.display='none';$('#ranking').style.display='none';$('#detail').style.display='block';$('#detail').innerHTML='<div class="card empty">상세 데이터를 불러오는 중…</div>';
+ try{let [r,g0]=await Promise.all([api(`/schedule/games/${encodeURIComponent(id)}/relay`),api(`/schedule/games/${encodeURIComponent(id)}`)]);let g=g0.game||g0.scheduleGame||g0,c=r.currentGameState||{},away=V(g,'awayTeamName')||'원정',home=V(g,'homeTeamName')||'홈',si=status(g),a=stat(g,r,'away'),h=stat(g,r,'home'),ing=V(r,'inn','currentInning')??V(g,'currentInning'),half=String(V(r,'homeOrAway')||'');let inning=ing?(ing+'회'+(half==='0'?'초':half==='1'?'말':'')):'';let ab=V(r,'awayLineup','awayEntry')||{},hb=V(r,'homeLineup','homeEntry')||{},al=V(ab,'batter','batters'),hl=V(hb,'batter','batters'),aid=V(c,'batter','batterId','currentBatter'),pid=V(c,'pitcher','pitcherId','currentPitcher'),batter=find(String(half)==='0'?al:hl,aid),pitch=find(String(half)==='0'?(V(hb,'pitcher','pitchers')||[]):(V(ab,'pitcher','pitchers')||[]),pid);let time=V(g,'gameDateTime','startTime','gameTime')||'',stad=V(g,'stadium','stadiumName')||'';
+ $('#detail').innerHTML=`<button class="back" onclick="closeDetail()">← 오늘 경기로 돌아가기</button><div class="score"><div class="small">${esc(time)} · ${esc(stad)}</div><div class="big"><div><div class="tn">${crest(away)}${esc(away)}</div><div class="sc">${esc(V(c,'awayScore')??score(g,'away'))}</div></div><div class="center">${esc(si[1])}<br>${esc(inning)}</div><div><div class="tn">${crest(home)}${esc(home)}</div><div class="sc">${esc(V(c,'homeScore')??score(g,'home'))}</div></div></div><div class="small" style="margin-top:10px">실시간 데이터 연결됨</div></div>
+ <div class="detailgrid"><div>
+ <div class="panel"><div class="pt">이닝별 스코어</div><div class="pb">${inningTable(r,g)}</div></div>
+ <div class="panel"><div class="pt">현재 타석</div><div class="pb"><div class="twocol"><div class="info"><b>타자</b><br>${esc(name(batter))}<br>볼 ${esc(V(c,'ball')??'-')} · 스트라이크 ${esc(V(c,'strike')??'-')} · 아웃 ${esc(V(c,'out')??'-')}</div><div class="info"><b>투수</b><br>${esc(name(pitch))}</div></div>${bases(c)}</div></div>
+ <div class="panel"><div class="pt">라인업</div><div class="pb"><div class="lineups"><div><b>${esc(away)}</b>${lineup(al)}</div><div><b>${esc(home)}</b>${lineup(hl)}</div></div></div></div>
+ </div><div>
+ <div class="panel"><div class="pt">R / H / E / B</div><div class="pb"><div class="twocol"><div><b>${esc(away)}</b><div class="rheb">${['r','h','e','b'].map(k=>`<div class="rh"><b>${esc(a[k]??'-')}</b><span>${k.toUpperCase()}</span></div>`).join('')}</div></div><div><b>${esc(home)}</b><div class="rheb">${['r','h','e','b'].map(k=>`<div class="rh"><b>${esc(h[k]??'-')}</b><span>${k.toUpperCase()}</span></div>`).join('')}</div></div></div></div></div>
+ <div class="panel"><div class="pt">투수</div><div class="pb"><div class="pitchers">${[V(ab,'pitcher','pitchers')||[],V(hb,'pitcher','pitchers')||[]].map((ls,i)=>{let p=A(ls)[0];return `<div class="pitcher"><b>${esc(p?name(p):(i?'홈 투수':'원정 투수'))}</b><div>ERA ${esc(p?V(p,'todayEra','era')??'-':'-')} · 이닝 ${esc(p?V(p,'inn','innings')??'-':'-')}<br>탈삼진 ${esc(p?V(p,'kk','strikeouts')??'-':'-')} · 볼넷 ${esc(p?V(p,'bb','walks')??'-':'-')}</div></div>`}).join('')}</div></div></div>
+ <div class="panel"><div class="pt">실시간 중계</div><div class="pb plays">${plays(r)}</div></div>
+ </div></div>`;
+ }catch(e){$('#detail').innerHTML=`<div class="card err" style="padding:30px">상세 데이터를 불러오지 못했습니다.<br><small>${esc(e.message)}</small><br><button class="refresh" style="margin-top:10px" onclick="detail('${esc(id)}')">다시 시도</button></div>`}
+}
+function closeDetail(){ $('#detail').style.display='none';$('#home').style.display='block';loadGames()}
+$('#gamesTab').onclick=()=>{closeDetail();$('#ranking').style.display='none';$('#gamesTab').classList.add('on');$('#rankTab').classList.remove('on')}
+$('#rankTab').onclick=()=>{$('#home').style.display='none';$('#detail').style.display='none';$('#ranking').style.display='block';$('#gamesTab').classList.remove('on');$('#rankTab').classList.add('on');loadRank()}
+loadGames();setInterval(()=>{if($('#home').style.display!=='none')loadGames()},5000);
+</script>
+</body>
+</html>
