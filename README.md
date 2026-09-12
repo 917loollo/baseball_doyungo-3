@@ -1,20 +1,11 @@
-# KBO LIVE Vercel v4
+# KBO LIVE Vercel v5
 
-스크린샷과 같은 형태의 KBO LIVE 대시보드입니다.
-
-- 상단 KBO LIVE 헤더/네비게이션
-- 날짜 선택 바
-- 오늘 경기 6개 카드형 가로 배치
-- 경기 카드 클릭 → 아래 상세 경기센터
-- 이닝별 스코어 R/H/E/B
-- 현재 타석, 베이스, 라인업, 투수, 실시간 중계
-- 전체 경기 / 월별 일정
-- 2026 순위
-- Vercel Serverless API 프록시로 Naver Sports API CORS 문제 우회
+5초 자동 갱신 시 화면을 비우지 않고 기존 화면을 그대로 유지한 상태에서 새 데이터를 받아 교체합니다.
 
 ## Vercel 배포
+1. GitHub 저장소에 `index.html`, `api/kbo.js`, `vercel.json`을 루트 기준으로 업로드합니다.
+2. Vercel에서 해당 GitHub 저장소를 Import합니다.
+3. Framework Preset은 `Other`로 두고 Build Command / Output Directory는 비워 둡니다.
+4. Deploy합니다.
 
-GitHub 저장소 루트에 `index.html`, `vercel.json`, `api/kbo.js`를 올린 뒤 Vercel에서 해당 저장소를 Import하세요.
-Framework Preset은 `Other`, Build Command와 Output Directory는 비워두면 됩니다.
-
-중요: `index.html`만 올리면 실시간 데이터가 작동하지 않습니다. 반드시 `api/kbo.js`도 함께 배포해야 합니다.
+`api/kbo.js`는 브라우저의 CORS 문제를 피하기 위한 KBO API 중계 서버리스 함수입니다.
