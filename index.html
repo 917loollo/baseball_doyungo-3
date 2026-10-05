@@ -57,37 +57,64 @@ function score(g,s){return V(g,s+'TeamScore',s+'Score',s+'ScoreValue')??'-'}
 function status(g){let x=String(V(g,'statusCode','status','gameStatus')||'').toUpperCase();if(/RESULT|END|FINAL|FINISH/.test(x))return ['end','경기 종료'];if(/START|LIVE|ING/.test(x))return ['live','LIVE'];return ['pre','경기 예정']}
 function valid(g){let a=V(g,'awayTeamName','awayName'),h=V(g,'homeTeamName','homeName');return g?.gameId&&a&&h&&a!=='-'&&h!=='-'&&V(g,'categoryId')==='kbo'}
 function unique(a){let m=new Map();A(a).forEach(g=>{if(valid(g))m.set(String(g.gameId),g)});return [...m.values()]}
-function gameCard(g,sel=false){let [k,l]=status(g),a=V(g,'awayTeamName'),h=V(g,'homeTeamName'),ing=V(g,'currentInning'),time=V(g,'gameDateTime','startTime','gameTime')||'';return `<article class="gamecard ${sel?'sel':''}" onclick="selectGame('${esc(g.gameId)}')"><div class="gamehead"><span>${esc(time)}</span><span class="${k==='live'?'livec':k==='pre'?'prevc':'endc'}">${k==='live'?'● ':''}${k==='pre'?'':(ing?ing+'회':'')}</span></div><div class="gteams"><div class="gteam">${badge(a)}${esc(short(a))}</div><div><div class="gscore">${esc(score(g,'away'))}:${esc(score(g,'home'))}</div><div class="gstatus ${k==='live'?'livec':k==='pre'?'prevc':'endc'}">${k==='pre'?'예정':k==='end'?'종료':(ing?ing+'회말':'LIVE')}</div></div><div class="gteam">${badge(h)}${esc(short(h))}</div></div></article>`}
+function gameCard(g,sel=false){let [k,l]=status(g),a=V(g,'awayTeamName'),h=V(g,'homeTeamName'),ing=V(g,'currentInning'),time=V(g,'gameDateTime','startTime','gameTime')||'';return `<article class="gamecard ${sel?'sel':''}" data-game-id="${esc(g.gameId)}" onclick="selectGame('${esc(g.gameId)}')"><div class="gamehead"><span>${esc(time)}</span><span class="${k==='live'?'livec':k==='pre'?'prevc':'endc'}">${k==='live'?'● ':''}${k==='pre'?'':(ing?ing+'회':'')}</span></div><div class="gteams"><div class="gteam">${badge(a)}${esc(short(a))}</div><div><div class="gscore">${esc(score(g,'away'))}:${esc(score(g,'home'))}</div><div class="gstatus ${k==='live'?'livec':k==='pre'?'prevc':'endc'}">${k==='pre'?'예정':k==='end'?'종료':(ing?ing+'회말':'LIVE')}</div></div><div class="gteam">${badge(h)}${esc(short(h))}</div></div></article>`}
 let currentView='today',selectedId=null,todayGames=[],allCache=[],allMonth='all';
 function setClock(){let d=new Date(),s=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(d).replaceAll('.','');$('#clock').textContent=s}
 function makeDays(){let d=new Date();let arr=[];for(let i=-1;i<6;i++){let x=new Date(d);x.setDate(d.getDate()+i);let y=x.getFullYear(),m=String(x.getMonth()+1).padStart(2,'0'),da=String(x.getDate()).padStart(2,'0');let ds=`${y}-${m}-${da}`,w=['일','월','화','수','목','금','토'][x.getDay()];arr.push([ds,`${Number(m)}.${Number(da)} (${w})`])}$('#days').innerHTML='<button class="arrow" onclick="shiftDays(-1)">‹</button>'+arr.map((x,i)=>`<button class="${i===1?'on':''}" data-date="${x[0]}" onclick="loadDate('${x[0]}',this)">${x[1]}</button>`).join('')+'<button class="arrow" onclick="shiftDays(1)">›</button>'}
 let dateOffset=0;function shiftDays(n){dateOffset+=n;let base=new Date();base.setDate(base.getDate()+dateOffset);let arr=[];for(let i=0;i<7;i++){let x=new Date(base);x.setDate(base.getDate()+i);let y=x.getFullYear(),m=String(x.getMonth()+1).padStart(2,'0'),da=String(x.getDate()).padStart(2,'0'),w=['일','월','화','수','목','금','토'][x.getDay()];arr.push([`${y}-${m}-${da}`,`${Number(m)}.${Number(da)} (${w})`])}$('#days').innerHTML='<button class="arrow" onclick="shiftDays(-1)">‹</button>'+arr.map((x,i)=>`<button class="${i===0?'on':''}" onclick="loadDate('${x[0]}',this)">${x[1]}</button>`).join('')+'<button class="arrow" onclick="shiftDays(1)">›</button>';loadDate(arr[0][0])}
 async function fetchSchedule(from,to){let r=await api(`/schedule/games?upperCategoryId=kbaseball&fromDate=${from}&toDate=${to}`);return unique(r.games||r.scheduleGames||r)}
 let loadToken=0,detailToken=0;
+function commitHTML(el,html){
+  if(!el)return;
+  const old=el.innerHTML;
+  if(old===html)return false;
+  const frag=document.createRange().createContextualFragment(html);
+  el.replaceChildren(frag);
+  return true;
+}
+function patchGameCards(list){
+  const wrap=$('#games');
+  const existing=[...wrap.querySelectorAll('[data-game-id]')];
+  const incoming=list.map(g=>String(g.gameId));
+  const sameOrder=existing.length===incoming.length&&existing.every((el,i)=>el.dataset.gameId===incoming[i]);
+  if(!list.length){ if(!wrap.querySelector('.empty')) commitHTML(wrap,'<div class="card empty">해당 날짜에 등록된 KBO 경기가 없습니다.</div>'); return; }
+  if(!sameOrder){ commitHTML(wrap,list.map(g=>gameCard(g,String(g.gameId)===String(selectedId))).join('')); return; }
+  list.forEach(g=>{
+    const el=wrap.querySelector(`[data-game-id="${CSS.escape(String(g.gameId))}"]`);
+    if(!el)return;
+    const html=gameCard(g,String(g.gameId)===String(selectedId));
+    const tmp=document.createRange().createContextualFragment(html).firstElementChild;
+    if(tmp && el.outerHTML!==tmp.outerHTML) el.replaceWith(tmp);
+  });
+}
 async function loadDate(d,btn){
   currentView='today';
   document.querySelectorAll('#days button').forEach(b=>b.classList.remove('on'));
   if(btn)btn.classList.add('on');
   $('#todayLabel').textContent=d===today()?'오늘 경기':d.replaceAll('-','.')+' 경기';
   const firstLoad=!todayGames.length;
-  if(firstLoad) $('#games').innerHTML='<div class="card empty">경기 불러오는 중…</div>';
+  if(firstLoad && !$('#games').querySelector('.gamecard')) $('#games').innerHTML='<div class="card empty">경기 불러오는 중…</div>';
   const token=++loadToken;
   try{
     const fresh=await fetchSchedule(d,d);
     if(token!==loadToken)return;
+    const previousSelected=selectedId;
     todayGames=fresh;
     const keep=selectedId&&todayGames.some(g=>String(g.gameId)===String(selectedId));
     if(!keep) selectedId=todayGames[0]?.gameId||null;
-    $('#games').innerHTML=todayGames.length?todayGames.map(g=>gameCard(g,String(g.gameId)===String(selectedId))).join(''):'<div class="card empty">해당 날짜에 등록된 KBO 경기가 없습니다.</div>';
-    if(selectedId)loadDetail(selectedId);
-    else $('#selectedDetail').innerHTML='';
+    patchGameCards(todayGames);
+    if(selectedId) loadDetail(selectedId);
+    else if(previousSelected) commitHTML($('#selectedDetail'),'');
   }catch(e){
     if(token!==loadToken)return;
-    if(!todayGames.length) $('#games').innerHTML=`<div class="card err">경기 데이터를 불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`;
-    // 기존 화면은 오류가 나도 지우지 않습니다.
+    if(!todayGames.length && !$('#games').querySelector('.gamecard')) $('#games').innerHTML=`<div class="card err">경기 데이터를 불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`;
   }
 }
-async function selectGame(id){selectedId=id;$('#games').innerHTML=todayGames.map(g=>gameCard(g,String(g.gameId)===String(id))).join('');loadDetail(id)}
+async function selectGame(id){
+  selectedId=id;
+  patchGameCards(todayGames);
+  loadDetail(id);
+}
 function splitRheb(v){if(Array.isArray(v))return v.map(x=>typeof x==='object'?(V(x,'value','score','r','h','e','b')??'-'):x);if(typeof v==='string'){let a=v.split(/\s*,\s*/).map(x=>x.trim());if(a.length>=4)return a.slice(0,4)}return null}
 function stat(g,r,s){let p=s==='away'?'away':'home',c=r.currentGameState||{},arr=splitRheb(V(g,p+'TeamRheb',p+'Rheb',p+'RHEB')),z={r:V(c,p+'Score')??V(g,p+'TeamScore',p+'Score'),h:V(c,p+'Hit',p+'Hits')??V(g,p+'Hit',p+'Hits'),e:V(c,p+'Error',p+'Errors')??V(g,p+'Error',p+'Errors'),b:V(c,p+'BallFour',p+'Walks',p+'BB')??V(g,p+'BallFour',p+'Walks',p+'BB')};if(arr){z.r=z.r??arr[0];z.h=z.h??arr[1];z.e=z.e??arr[2];z.b=z.b??arr[3]}return z}
 function inningVals(r,side){let raw=V(r,'inningScore','inningScores')||{};let v=raw?.[side]??raw?.[side+'Score'];if(Array.isArray(v))return v.map(x=>typeof x==='object'?(V(x,'score','value','run')??'-'):x);if(v&&typeof v==='object'){let ks=Object.keys(v).filter(k=>/^\d+$/.test(k)).sort((a,b)=>+a-+b);return ks.map(k=>typeof v[k]==='object'?(V(v[k],'score','value','run')??'-'):v[k])}if(typeof v==='string'){let a=v.split(/\s*,\s*/);return a.length>=1?a:[]}return []}
@@ -100,15 +127,16 @@ function plays(r,away,home){let out=[],seen=new Set();A(V(r,'textRelays','relays
 async function loadDetail(id){
   const token=++detailToken;
   const hasDetail=!!$('#selectedDetail').querySelector('.detailgrid');
-  if(!hasDetail) $('#selectedDetail').innerHTML='<div class="card empty">경기 상세 데이터를 불러오는 중…</div>';
+  
   try{let [r,g0]=await Promise.all([api(`/schedule/games/${encodeURIComponent(id)}/relay`),api(`/schedule/games/${encodeURIComponent(id)}`)]);if(token!==detailToken||String(id)!==String(selectedId))return;let g=g0.game||g0.scheduleGame||g0,c=stateFromRelay(r),away=V(g,'awayTeamName')||'원정',home=V(g,'homeTeamName')||'홈',si=status(g),as=stat(g,r,'away'),hs=stat(g,r,'home'),ing=V(r,'inn','currentInning')??V(g,'currentInning'),half=String(V(r,'homeOrAway')||''),inning=ing?(ing+'회'+(half==='0'?'초':half==='1'?'말':'')):'';let ab=V(r,'awayLineup','awayEntry')||{},hb=V(r,'homeLineup','homeEntry')||{},al=playerList(V(ab,'batter','batters')),hl=playerList(V(hb,'batter','batters')),ap=playerList(V(ab,'pitcher','pitchers')),hp=playerList(V(hb,'pitcher','pitchers')),br=latestBatterRecord(r),aid=V(c,'batter','batterId','currentBatter'),pid=V(c,'pitcher','pitcherId','currentPitcher'),batter=br||find(String(half)==='0'?al:hl,aid),pitch=find(String(half)==='0'?hp:ap,pid),pls=[ap,hp];
-$('#selectedDetail').innerHTML=`<div class="detailgrid"><div class="left"><div class="card scorecard"><div class="scoretop"><span class="teamname">${badge(away,true)}${esc(away)}</span><span class="scorebig">${esc(V(c,'awayScore')??score(g,'away'))} : ${esc(V(c,'homeScore')??score(g,'home'))}</span><span class="teamname">${esc(home)}${badge(home,true)}</span><span class="statuspill">${esc(si[1])}</span><span class="inningpill">${esc(inning||'')}</span></div><div class="scoremeta">${esc(V(g,'gameDateTime','startTime','gameTime')||'')} · ${esc(V(g,'stadium','stadiumName')||'')} · 실시간 데이터 연결됨</div></div>
+commitHTML($('#selectedDetail'),`<div class="detailgrid"><div class="left"><div class="card scorecard"><div class="scoretop"><span class="teamname">${badge(away,true)}${esc(away)}</span><span class="scorebig">${esc(V(c,'awayScore')??score(g,'away'))} : ${esc(V(c,'homeScore')??score(g,'home'))}</span><span class="teamname">${esc(home)}${badge(home,true)}</span><span class="statuspill">${esc(si[1])}</span><span class="inningpill">${esc(inning||'')}</span></div><div class="scoremeta">${esc(V(g,'gameDateTime','startTime','gameTime')||'')} · ${esc(V(g,'stadium','stadiumName')||'')} · 실시간 데이터 연결됨</div></div>
 <div class="card panel"><div class="pt">이닝별 스코어</div><div class="pb">${inningTable(r,g)}</div></div>
 <div class="card panel"><div class="pt">현재 타석</div><div class="pb"><div class="twocol"><div class="playerbox"><b>타자</b><div class="main">${esc(name(batter))}</div><div class="muted">오늘 ${esc(V(batter,'todayHra','todayAvg','avg','battingAverage')??'-')} · 시즌 ${esc(V(batter,'seasonHra','seasonAvg','avg','battingAverage')??'-')}</div></div><div class="pitchbox"><b>투수</b><div class="main">${esc(name(pitch))}</div><div class="muted">투구수 ${esc(V(pitch,'pitchCount','pitches','pitchingCount')??'-')} · ERA ${esc(V(pitch,'era','todayEra')??'-')}</div></div></div>${bases(c,al,hl,half)}</div></div>
 <div class="card panel"><div class="pt">라인업</div><div class="pb"><div class="lineups"><div class="lineupcol"><div class="lineuphead">${esc(away)}</div>${lineup(al)}</div><div class="lineupcol"><div class="lineuphead">${esc(home)}</div>${lineup(hl)}</div></div></div></div></div>
 <div class="right"><div class="card panel"><div class="pt">R / H / E / B</div><div class="pb"><div class="teamstat"><div class="teamstathead">${esc(away)}</div><div class="rheb">${['r','h','e','b'].map(k=>`<div class="rh"><b>${esc(as[k]??'-')}</b><span>${k.toUpperCase()}</span></div>`).join('')}</div></div><div class="teamstat"><div class="teamstathead">${esc(home)}</div><div class="rheb">${['r','h','e','b'].map(k=>`<div class="rh"><b>${esc(hs[k]??'-')}</b><span>${k.toUpperCase()}</span></div>`).join('')}</div></div></div></div>
 <div class="card panel"><div class="pt">투수</div><div class="pb"><div class="pitchers">${pls.map((ls,i)=>{let p=ls[0];return `<div class="pitcher"><b>${esc(p?name(p):(i?'홈 투수':'원정 투수'))}</b><div>이닝 ${esc(p?V(p,'inn','innings')??'-':'-')} · 투구수 ${esc(p?V(p,'pitchCount','pitches')??'-':'-')}<br>ERA ${esc(p?V(p,'era','todayEra')??'-':'-')} · 탈삼진 ${esc(p?V(p,'kk','strikeouts')??'-':'-')}</div></div>`}).join('')}</div></div></div>
-<div class="card panel playspanel"><div class="pt">실시간 중계</div><div class="pb plays">${plays(r,away,home)}</div></div></div></div>`}catch(e){if(!hasDetail)$('#selectedDetail').innerHTML=`<div class="card err">상세 데이터를 불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`}}
+<div class="card panel playspanel"><div class="pt">실시간 중계</div><div class="pb plays">${plays(r,away,home)}</div></div></div></div>`);
+}catch(e){if(!$('#selectedDetail').querySelector('.detailgrid')) commitHTML($('#selectedDetail'),`<div class="card err">상세 데이터를 불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`);}}
 function monthButtons(){let a=[['all','전체'],['03','3월'],['04','4월'],['05','5월'],['06','6월'],['07','7월'],['08','8월'],['09','9월'],['10','10월']];$('#monthtools').innerHTML=a.map(x=>`<button class="monthbtn ${allMonth===x[0]?'on':''}" onclick="selectMonth('${x[0]}')">${x[1]}</button>`).join('')}
 function dateOf(g){let t=V(g,'gameDateTime','startTime','gameTime','date')||'';let m=String(t).match(/(2026)[-\/.](\d{1,2})[-\/.](\d{1,2})/);return m?`${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`:''}function fmtDate(d){let x=new Date(d+'T12:00:00');return `${x.getMonth()+1}.${x.getDate()} (${['일','월','화','수','목','금','토'][x.getDay()]})`}
 async function loadAllGames(force=false){currentView='all';if(allCache.length&&!force){renderAll();return}$('#allgamesbody').innerHTML='<div class="card empty">전체 경기 일정을 불러오는 중…</div>';try{let ms=['03','04','05','06','07','08','09','10'];let r=await Promise.all(ms.map(m=>fetchSchedule(`2026-${m}-01`,`2026-${m}-${['04','06','09'].includes(m)?30:31}`)));allCache=unique(r.flat()).sort((a,b)=>dateOf(a).localeCompare(dateOf(b)));renderAll()}catch(e){$('#allgamesbody').innerHTML=`<div class="card err">전체 경기 데이터를 불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`}}
