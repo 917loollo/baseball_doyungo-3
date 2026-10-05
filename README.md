@@ -1,14 +1,9 @@
-# KBO LIVE v11
+# KBO-LIVE Vercel v12
 
-Vercel용 KBO 경기센터입니다.
+- 선수 얼굴/프로필 사진 제거
+- 현재 타석의 1·2·3루/홈을 실제 야구장 형태에 가깝게 개선
+- 현재 수비팀의 9개 수비 위치를 그라운드에 표시
+- 기존 네이버 스포츠 relay 래퍼(result.textRelayData) 처리 유지
+- 5초 자동 새로고침 시 기존 화면 유지
 
-## v11 수정
-- Naver relay API의 `result.textRelayData` 래퍼를 정상 해제해 **실시간 중계, 현재 타석, 주자, 라인업, 투수**가 표시되도록 수정
-- `homeLineup/awayLineup` 및 `homeEntry/awayEntry`의 batter/pitcher 배열을 직접 처리
-- 팀 로고를 **원형 프레임에 꽉 맞는 형태**로 표시
-- 네이버 팀 로고 실패 시 다음 스포츠 로고로 fallback
-- 기존 5초 백그라운드 갱신 방식 유지
-- 모바일 레이아웃 유지
-
-## 배포
-GitHub 저장소 루트에 `index.html`, `api/`, `vercel.json`을 함께 올린 뒤 Vercel에서 Import/Deploy하세요.
+Vercel에 기존 프로젝트 파일을 교체해 배포하세요.
