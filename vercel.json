@@ -1,7 +1,6 @@
 {
   "functions": {
-    "api/kbo.js": {
-      "maxDuration": 10
-    }
+    "api/kbo.js": {"maxDuration": 10},
+    "api/player-image.js": {"maxDuration": 10}
   }
 }
