@@ -14,3 +14,11 @@
 - v19: 실시간 중계에 득점·1회~9회 이닝 탭 추가 (relay?inning=N 호출)
 
 Vercel에 기존 프로젝트 파일을 교체해 배포하세요.
+
+
+## D.V. AI setup
+The KBO AI screen uses `/api/ai` so the Groq API key is never exposed in browser JavaScript.
+Before deploying to Vercel, add an environment variable named `GROQ_API_KEY` containing your own server-side key.
+Do not put the key in `index.html`. The key included in any previous public HTML should be revoked/rotated.
+
+AI features: current-game context, MY-team context, game-flow analysis, summary, viewing points, team comparison, and baseball-term explanations.
