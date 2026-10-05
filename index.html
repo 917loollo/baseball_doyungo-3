@@ -41,6 +41,16 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}body{-webkit-text-size-adj
 @media (max-width:380px){.page{padding-left:6px;padding-right:6px}.gamecard{flex-basis:148px;min-width:148px;width:148px}.twocol,.pitchers{grid-template-columns:1fr}.lineups{grid-template-columns:1fr}.scoretop{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}.scorebig{font-size:18px}}
 
 .asset-logo{width:36px;height:36px;object-fit:contain;display:block;margin:0 auto 3px}.mini.asset-logo{width:34px;height:34px;margin:0}.playerphoto{width:32px;height:32px;border-radius:50%;object-fit:cover;background:#eef3f8;border:1px solid #dce4ee}.playerphoto.lg{width:42px;height:42px}.playerrow{display:flex;align-items:center;gap:8px}.source-note{font-size:9px;color:#91a0b1;margin-top:4px}.livefield{height:220px;border-radius:12px;background:linear-gradient(#eef5fb,#fff);position:relative;overflow:hidden;margin:0 0 12px;border:1px solid #e1e8f0}.livefield:before{content:"LIVE";position:absolute;top:10px;left:10px;background:#e8334b;color:#fff;font-size:10px;font-weight:900;padding:4px 7px;border-radius:5px}.fielddiamond{position:absolute;left:50%;top:54%;width:110px;height:110px;transform:translate(-50%,-50%) rotate(45deg);background:#cfe6bf;border:2px solid #8eaa7d}.fielddiamond:after{content:"";position:absolute;inset:18px;background:#e7d0a4;border:2px solid #a88b59}.fieldtext{position:absolute;left:50%;top:18px;transform:translateX(-50%);font-weight:950;color:#23456e;font-size:12px}.livebadge{position:absolute;right:10px;top:10px;background:#fff;border:1px solid #dce4ee;border-radius:6px;padding:4px 7px;font-size:9px;font-weight:900;color:#526a85}.
+
+/* v11: exact circular team-logo frame */
+.logo-circle{display:grid!important;place-items:center;position:relative;flex:0 0 auto;overflow:hidden;background:#fff!important;border:1px solid #d8e1ec!important;box-shadow:0 1px 4px #17385d18!important}
+.logo-circle.badge{width:34px;height:34px;border-radius:50%;margin:0 auto 3px;padding:2px}
+.logo-circle.mini{width:36px;height:36px;border-radius:50%;padding:2px}
+.logo-circle .asset-logo{width:100%!important;height:100%!important;margin:0!important;border-radius:50%;object-fit:contain;background:#fff;display:block}
+.logoFallback{display:none;position:absolute;font-size:9px;font-weight:950;color:#173b70;line-height:1;text-align:center}
+.scoretop .logo-circle.mini{width:36px;height:36px}
+.gteam .logo-circle.badge{width:30px;height:30px}
+@media(max-width:650px){.logo-circle.badge{width:30px;height:30px}.logo-circle.mini,.scoretop .logo-circle.mini{width:32px;height:32px}}
 </style>
 </head>
 <body>
@@ -52,10 +62,24 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}body{-webkit-text-size-adj
 </main>
 <script>
 const $=s=>document.querySelector(s),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),A=x=>Array.isArray(x)?x:(x&&typeof x==='object'?Object.values(x):[]),V=(o,...ks)=>{for(const k of ks)if(o&&o[k]!==undefined&&o[k]!==null&&o[k]!=='')return o[k];return null};
-function playerList(x){if(Array.isArray(x))return x;if(!x)return[];if(typeof x==='object'){for(const k of ['batter','batters','pitcher','pitchers','players','playerList'])if(Array.isArray(x[k]))return x[k];if(V(x,'pcode','playerId','id','name','playerName'))return[x];}return A(x)}
-function pcode(x){return V(x,'pcode','playerId','id','batterId','pitcherId','code')}
-function stateFromRelay(r){if(r?.currentGameState)return r.currentGameState;let rel=A(V(r,'textRelays','relays'));for(let i=rel.length-1;i>=0;i--){let opts=A(V(rel[i],'textOptions','options','texts'));for(let j=opts.length-1;j>=0;j--){let st=V(opts[j],'currentGameState','gameState');if(st)return st}}return{}}
-function latestBatterRecord(r){let rel=A(V(r,'textRelays','relays'));for(let i=rel.length-1;i>=0;i--){let opts=A(V(rel[i],'textOptions','options','texts'));for(let j=opts.length-1;j>=0;j--){let br=V(opts[j],'batterRecord','batter','batterInfo');if(br&&typeof br==='object')return br}}return null}
+function playerList(x){
+  if(Array.isArray(x)) return x.filter(Boolean);
+  if(!x) return [];
+  if(typeof x==='object'){
+    for(const k of ['batter','batters','pitcher','pitchers','players','playerList','lineup','entries','data']){
+      if(Array.isArray(x[k])) return x[k].filter(Boolean);
+    }
+    if(V(x,'pcode','playerId','id','name','playerName','backnum','batOrder')) return [x];
+  }
+  return A(x).filter(Boolean);
+}
+function pcode(x){return V(x,'pcode','playerId','id','batterId','pitcherId','code','playerCode')}
+function unwrapRelay(x){
+  if(!x) return {};
+  return x.textRelayData || x.relayData || x.data?.textRelayData || x.result?.textRelayData || x;
+}
+function stateFromRelay(r){r=unwrapRelay(r);if(r?.currentGameState)return r.currentGameState;let rel=A(V(r,'textRelays','relays'));for(let i=rel.length-1;i>=0;i--){let opts=A(V(rel[i],'textOptions','options','texts'));for(let j=opts.length-1;j>=0;j--){let st=V(opts[j],'currentGameState','gameState');if(st)return st}}return{}}
+function latestBatterRecord(r){r=unwrapRelay(r);let rel=A(V(r,'textRelays','relays'));for(let i=rel.length-1;i>=0;i--){let opts=A(V(rel[i],'textOptions','options','texts'));for(let j=opts.length-1;j>=0;j--){let br=V(opts[j],'batterRecord','batterInfo');if(br&&typeof br==='object')return br}}return null}
 
 const api=async p=>{const r=await fetch('/api/kbo?path='+encodeURIComponent(p),{cache:'no-store'}),t=await r.text();let j;try{j=JSON.parse(t)}catch{throw Error('API 응답을 읽을 수 없습니다')}if(!r.ok)throw Error(j.error||('API '+r.status));return j.result??j};
 const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -65,7 +89,7 @@ const teamCode={'LG':'LG','두산':'OB','삼성':'SS','SSG':'SK','KT':'KT','한�
 const teamDaumCode={'LG':'LG','두산':'OB','삼성':'SS','SSG':'SK','KT':'KT','한화':'HH','롯데':'LT','KIA':'HT','NC':'NC','키움':'WO'};
 function teamLogoUrl(n){let s=short(n);return `https://sports-phinf.pstatic.net/team/kbo/default/${teamCode[s]||'no_emblem_s_square'}.png?type=f64_64`}
 function teamLogoDaum(n){let s=short(n),c=teamDaumCode[s]||'NC';return `https://img1.daumcdn.net/thumb/R150x150/?fname=${encodeURIComponent(`http://t1.daumcdn.net/media/img-section/sports13/logo/team/1/${c}_300300.png`)}`}
-function badge(n,mini=false){let s=short(n),c=colors[s]||'#68798d';let cls=mini?'mini':'badge';return `<span class="${cls}" style="background:${c};position:relative"><img class="${mini?'mini ':''}asset-logo" src="${teamLogoUrl(s)}" data-fallback="${teamLogoDaum(s)}" alt="${esc(s)}" onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback)this.src=this.dataset.fallback;else this.style.display='none'"><span class="logoFallback">${esc(s.slice(0,3))}</span></span>`}
+function badge(n,mini=false){let s=short(n),c=colors[s]||'#68798d',cls=mini?'mini':'badge';return `<span class="${cls} logo-circle" style="--team:${c}"><img class="asset-logo" src="${teamLogoUrl(s)}" data-fallback="${teamLogoDaum(s)}" alt="${esc(s)}" onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback=''}else{this.style.display='none';this.nextElementSibling.style.display='block'}"><span class="logoFallback">${esc(s.slice(0,3))}</span></span>`}
 function score(g,s){return V(g,s+'TeamScore',s+'Score',s+'ScoreValue')??'-'}
 function status(g){let x=String(V(g,'statusCode','status','gameStatus')||'').toUpperCase();if(/RESULT|END|FINAL|FINISH/.test(x))return ['end','경기 종료'];if(/START|LIVE|ING/.test(x))return ['live','LIVE'];return ['pre','경기 예정']}
 function valid(g){let a=V(g,'awayTeamName','awayName'),h=V(g,'homeTeamName','homeName');return g?.gameId&&a&&h&&a!=='-'&&h!=='-'&&V(g,'categoryId')==='kbo'}
@@ -143,7 +167,7 @@ async function loadDetail(id){
   const token=++detailToken;
   const hasDetail=!!$('#selectedDetail').querySelector('.detailgrid');
   
-  try{let [r,g0]=await Promise.all([api(`/schedule/games/${encodeURIComponent(id)}/relay`),api(`/schedule/games/${encodeURIComponent(id)}`)]);if(token!==detailToken||String(id)!==String(selectedId))return;let g=g0.game||g0.scheduleGame||g0,c=stateFromRelay(r),away=V(g,'awayTeamName')||'원정',home=V(g,'homeTeamName')||'홈',si=status(g),as=stat(g,r,'away'),hs=stat(g,r,'home'),ing=V(r,'inn','currentInning')??V(g,'currentInning'),half=String(V(r,'homeOrAway')||''),inning=ing?(ing+'회'+(half==='0'?'초':half==='1'?'말':'')):'';let ab=V(r,'awayLineup','awayEntry')||{},hb=V(r,'homeLineup','homeEntry')||{},al=playerList(V(ab,'batter','batters')),hl=playerList(V(hb,'batter','batters')),ap=playerList(V(ab,'pitcher','pitchers')),hp=playerList(V(hb,'pitcher','pitchers')),br=latestBatterRecord(r),aid=V(c,'batter','batterId','currentBatter'),pid=V(c,'pitcher','pitcherId','currentPitcher'),batter=br||find(String(half)==='0'?al:hl,aid),pitch=find(String(half)==='0'?hp:ap,pid),pls=[ap,hp];
+  try{let [relayRaw,g0]=await Promise.all([api(`/schedule/games/${encodeURIComponent(id)}/relay`),api(`/schedule/games/${encodeURIComponent(id)}`)]);if(token!==detailToken||String(id)!==String(selectedId))return;let r=unwrapRelay(relayRaw),g=g0.game||g0.scheduleGame||g0,c=stateFromRelay(r),away=V(g,'awayTeamName')||'원정',home=V(g,'homeTeamName')||'홈',si=status(g),as=stat(g,r,'away'),hs=stat(g,r,'home'),ing=V(r,'inn','currentInning')??V(g,'currentInning'),half=String(V(r,'homeOrAway')||''),inning=ing?(ing+'회'+(half==='0'?'초':half==='1'?'말':'')):'';let ab=V(r,'awayLineup','awayEntry')||{},hb=V(r,'homeLineup','homeEntry')||{},al=playerList(V(ab,'batter','batters','players')),hl=playerList(V(hb,'batter','batters','players')),ap=playerList(V(ab,'pitcher','pitchers','players')),hp=playerList(V(hb,'pitcher','pitchers','players')),br=latestBatterRecord(r),aid=V(c,'batter','batterId','currentBatter'),pid=V(c,'pitcher','pitcherId','currentPitcher'),batter=br||find(String(half)==='0'?al:hl,aid),pitch=find(String(half)==='0'?hp:ap,pid),pls=[ap,hp];
 commitHTML($('#selectedDetail'),`<div class="detailgrid"><div class="left"><div class="card scorecard"><div class="scoretop"><span class="teamname">${badge(away,true)}${esc(away)}</span><span class="scorebig">${esc(V(c,'awayScore')??score(g,'away'))} : ${esc(V(c,'homeScore')??score(g,'home'))}</span><span class="teamname">${esc(home)}${badge(home,true)}</span><span class="statuspill">${esc(si[1])}</span><span class="inningpill">${esc(inning||'')}</span></div><div class="scoremeta">${esc(V(g,'gameDateTime','startTime','gameTime')||'')} · ${esc(V(g,'stadium','stadiumName')||'')} · 실시간 데이터 연결됨 <span class="source-note">데이터: 네이버 스포츠 / KBO 공식 기록 · 이미지: 네이버 스포츠 / 다음 스포츠 우선</span></div></div>
 <div class="livefield"><div class="fieldtext">${esc(away)} vs ${esc(home)}</div><div class="fielddiamond"></div><div class="livebadge">네이버 스포츠 · KBO 기록 연동</div></div><div class="card panel"><div class="pt">이닝별 스코어</div><div class="pb">${inningTable(r,g)}</div></div>
 <div class="card panel"><div class="pt">현재 타석</div><div class="pb"><div class="twocol"><div class="playerbox"><b>타자</b><div class="playerrow" style="margin-top:6px">${playerPhoto(batter,true)}<div class="main">${esc(name(batter))}</div></div><div class="muted">오늘 ${esc(V(batter,'todayHra','todayAvg','avg','battingAverage')??'-')} · 시즌 ${esc(V(batter,'seasonHra','seasonAvg','avg','battingAverage')??'-')}</div></div><div class="pitchbox"><b>투수</b><div class="playerrow" style="margin-top:6px">${playerPhoto(pitch,true)}<div class="main">${esc(name(pitch))}</div></div><div class="muted">투구수 ${esc(V(pitch,'pitchCount','pitches','pitchingCount')??'-')} · ERA ${esc(V(pitch,'era','todayEra')??'-')}</div></div></div>${bases(c,al,hl,half)}</div></div>
