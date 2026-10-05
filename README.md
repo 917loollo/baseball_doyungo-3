@@ -16,9 +16,9 @@
 Vercel에 기존 프로젝트 파일을 교체해 배포하세요.
 
 
-## D.V. AI setup
-The KBO AI screen uses `/api/ai` so the Groq API key is never exposed in browser JavaScript.
-Before deploying to Vercel, add an environment variable named `GROQ_API_KEY` containing your own server-side key.
-Do not put the key in `index.html`. The key included in any previous public HTML should be revoked/rotated.
+## D.V. AI
+The KBO AI screen no longer requires a GROQ_API_KEY environment variable.
+It opens the user's D.V. AI service at https://ai.doyungo.com/ and automatically copies the KBO-aware prompt (selected game/date/MY team context) to the clipboard before opening D.V.
+This avoids exposing or proxying a Groq API key from the KBO project.
 
 AI features: current-game context, MY-team context, game-flow analysis, summary, viewing points, team comparison, and baseball-term explanations.
