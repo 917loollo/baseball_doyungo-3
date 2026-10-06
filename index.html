@@ -208,7 +208,7 @@ function patchGameCards(list){
     if(!el)return;
     const html=gameCard(g,String(g.gameId)===String(selectedId));
     const tmp=document.createRange().createContextualFragment(html).firstElementChild;
-    if(tmp && el.outerHTML!==tmp.outerHTML) el.replaceWith(tmp);
+    if(tmp && el.outerHTML!==tmp.outerHTML) window.__morphEl(el,tmp);
   });
 }
 async function loadDate(d,btn){
@@ -309,6 +309,29 @@ const _ld=loadDetail;loadDetail=async function(id){gradFor(todayGames.find(x=>St
 try{const c=JSON.parse(localStorage.getItem('DOYUNGO_sch_'+selectedDate)||'null');
  if(Array.isArray(c)&&c.length&&!todayGames.length){todayGames=c;const sid=localStorage.getItem('DOYUNGO_selected_game');selectedId=c.some(g=>String(g.gameId)===sid)?sid:c[0].gameId;patchGameCards(todayGames);
   const dt=JSON.parse(localStorage.getItem('DOYUNGO_detail')||'null'),g=c.find(x=>String(x.gameId)===String(selectedId));gradFor(g);if(dt&&String(dt.id)===String(selectedId))$('#selectedDetail').innerHTML=dt.h}}catch(e){}
+})();
+</script>
+<script id="v32-morph">
+/* DOM 병합 갱신: 바뀐 부분만 고치고 이미지(로고·선수사진) 노드는 그대로 유지 → 깜빡임/빈 칸 방지 */
+(()=>{
+let ch=false;
+const skipAttr=(x)=>x.nodeName==='IMG'||(x.classList&&x.classList.contains('logoFallback'));
+function syncAttrs(x,y){if(skipAttr(x)){if(x.nodeName==='IMG'){['class','alt'].forEach(k=>{const v=y.getAttribute(k);if(v!==x.getAttribute(k)){v==null?x.removeAttribute(k):x.setAttribute(k,v);ch=true}})}return}
+ for(const a of [...x.attributes])if(!y.hasAttribute(a.name)){x.removeAttribute(a.name);ch=true}
+ for(const a of y.attributes)if(x.getAttribute(a.name)!==a.value){x.setAttribute(a.name,a.value);ch=true}}
+function morph(a,b){const ac=[...a.childNodes],bc=[...b.childNodes];
+ for(let i=0;i<bc.length;i++){const x=ac[i],y=bc[i];
+  if(!x){a.appendChild(y);ch=true;continue}
+  if(x.nodeType!==y.nodeType||x.nodeName!==y.nodeName){a.replaceChild(y,x);ch=true;continue}
+  if(x.nodeType!==1){if(x.data!==y.data){x.data=y.data;ch=true}continue}
+  if(x.nodeName==='IMG'){if(x.dataset.o!==undefined&&x.dataset.o!==y.getAttribute('src')){a.replaceChild(y,x);ch=true}else syncAttrs(x,y);continue}
+  syncAttrs(x,y);morph(x,y)}
+ while(a.childNodes.length>bc.length){a.removeChild(a.lastChild);ch=true}}
+const tag=el=>el.querySelectorAll('img:not([data-o])').forEach(i=>i.dataset.o=i.getAttribute('src')||'');
+window.__morphEl=(el,tmp)=>{syncAttrs(el,tmp);morph(el,tmp);tag(el)};
+commitHTML=function(el,html){if(!el)return;const t=document.createElement('template');t.innerHTML=html;
+ if(!el.firstChild){if(!html)return false;el.replaceChildren(t.content);tag(el);return true}
+ ch=false;morph(el,t.content);tag(el);return ch};
 })();
 </script>
 <script id="v30-helper">async function monthSched(m){const a=`2026-${m}-01`,b=`2026-${m}-${['04','06','09'].includes(m)?30:31}`,k='DOYUNGO_month_'+m,past=b<today();if(past)try{const c=JSON.parse(localStorage.getItem(k));if(Array.isArray(c)&&c.length)return c}catch{}const r=await fetchSchedule(a,b);if(past)try{localStorage.setItem(k,JSON.stringify(r))}catch{}return r}
