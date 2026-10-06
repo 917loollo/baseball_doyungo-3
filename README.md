@@ -38,3 +38,4 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v32: 화면 갱신을 DOM 병합 방식으로 변경 — 로고·선수 사진이 꺼졌다 켜지는 깜빡임 제거
 - v33: /api 미배포(404) 시 원인 안내 문구
 - v34: 화면 문구 DOYUNGO 로 통일, /api/kbo·/api/doyungo 모두 지원(자동 전환), diag.html 포함
+- v35: 이닝/상태 알약 글자색 복구, 선수 사진 다중 출처(네이버·KBO) 병렬 조회

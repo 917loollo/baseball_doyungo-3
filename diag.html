@@ -42,6 +42,9 @@ const snip=t=>t.replace(/\s+/g,' ').slice(0,140);
  const t3=await get('/api/daum?gameId=0');add(t3.s&&!(t3.s===404&&/NOT_FOUND/i.test(t3.t))?'ok':'no','/api/daum (HTTP '+t3.s+')',snip(t3.t));
  const t4=await get('/api/player-image?playerId=1');add(t4.s&&!(t4.s===404&&/NOT_FOUND/i.test(t4.t))?'ok':'no','/api/player-image (HTTP '+t4.s+')',t4.s===404?'(404 이더라도 선수 번호가 없을 뿐이면 함수는 정상)':'');
  const t5=await get('/api/ai');add(t5.s===405?'ok':'no','/api/ai (HTTP '+t5.s+')',t5.s===405?'GET 은 405 가 정상(함수 존재)':snip(t5.t));
+
+ const t6=await get('/api/player-image?playerId=67341&debug=1');let pj=null;try{pj=JSON.parse(t6.t)}catch(e){}
+ add(pj&&pj.some(x=>x.ok)?'ok':'wn','선수 사진 출처 테스트 (HTTP '+t6.s+')',pj?pj.map(x=>(x.ok?'✅ ':'✗ ')+x.status+' '+x.url.replace(/^https:\/\//,'')).join('\n'):snip(t6.t));
  // 5) 브라우저 저장 데이터
  add('ok','진단 완료','이 화면을 캡처하거나 [결과 복사]를 눌러 붙여넣어 주세요.');
 })();

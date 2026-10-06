@@ -246,7 +246,7 @@ function inningVals(r,side){let raw=V(r,'inningScore','inningScores')||{};let v=
 function inningTable(r,g){let a=inningVals(r,'away'),h=inningVals(r,'home'),n=Math.max(9,a.length,h.length),as=stat(g,r,'away'),hs=stat(g,r,'home');let head='<th>팀</th>'+Array.from({length:n},(_,i)=>`<th>${i+1}</th>`).join('')+'<th>R</th><th>H</th><th>E</th><th>B</th>';let row=(name,v,s)=>`<tr><td>${esc(name)}</td>${Array.from({length:n},(_,i)=>`<td>${esc(v[i]??'-')}</td>`).join('')}<td>${esc(s.r??'-')}</td><td>${esc(s.h??'-')}</td><td>${esc(s.e??'-')}</td><td>${esc(s.b??'-')}</td></tr>`;return `<div class="scroll"><table class="inning"><thead><tr>${head}</tr></thead><tbody>${row(V(g,'awayTeamName'),a,as)}${row(V(g,'homeTeamName'),h,hs)}</tbody></table></div>`}
 function find(list,id){if(id==null||id==='')return null;let sid=String(id);return playerList(list).find(x=>String(pcode(x)??'')===sid)||playerList(list).find(x=>String(V(x,'name','playerName')??'')===sid)||null}
 function name(x){return typeof x==='string'?(x||'-'):V(x,'name','playerName','batterName','pitcherName')||'-'}
-function playerPhotoUrl(p){let id=pcode(p);if(!id)return '';let direct=V(p,'imageUrl','profileImageUrl','playerImageUrl','photoUrl','image');if(direct)return direct;return `/api/player-image?playerId=${encodeURIComponent(id)}`}
+function playerPhotoUrl(p){let id=pcode(p);if(!id)return '';let direct=V(p,'imageUrl','profileImageUrl','playerImageUrl','photoUrl','image','playerImage','profileImage','imgUrl','pImgUrl','photo','playerImgUrl');if(direct)return direct;return `/api/player-image?playerId=${encodeURIComponent(id)}`}
 const PH_FB="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" fill="#e6edf5"/><circle cx="24" cy="19" r="8" fill="#a9b8cb"/><path d="M8 48c2-12 10-17 16-17s14 5 16 17z" fill="#a9b8cb"/></svg>');
 function playerPhoto(p,lg){const u=playerPhotoUrl(p),c='playerphoto'+(lg?' lg':'');return u?`<img class="${c}" src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=PH_FB">`:`<img class="${c}" src="${PH_FB}" alt="">`}
 function lineup(list){let a=playerList(list);return a.length?a.slice(0,12).map((p,i)=>`<div class="player"><span>${esc(V(p,'batOrder','order','no')??i+1)}</span><div class="playerrow">${playerPhoto(p)}<b>${esc(name(p))}</b></div><small>${esc(V(p,'posName','position','pos')||'')}</small></div>`).join(''):'<div class="empty">라인업 없음</div>'}
@@ -295,7 +295,7 @@ function show(which){['home','allgames','ranking','myteam','ai'].forEach(x=>$('#
 $('#gamesTab').onclick=()=>show('home');$('#allTab').onclick=()=>show('all');$('#rankTab').onclick=()=>show('rank');$('#myTab').onclick=()=>show('my');$('#aiTab').onclick=()=>show('ai');
 </script><style id="v27-css">
 #selectedDetail .scorecard{background:linear-gradient(115deg,var(--ga,#17213d) 0%,color-mix(in srgb,var(--ga,#17213d) 50%,var(--gb,#c30452) 50%) 50%,var(--gb,#c30452) 100%)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 12px 30px color-mix(in srgb,var(--gb,#c30452) 35%,transparent)}
-#selectedDetail .scorecard *{color:inherit!important}#selectedDetail .scorecard small,#selectedDetail .scorecard .muted{opacity:.82}
+#selectedDetail .scorecard *:not(.statuspill):not(.inningpill){color:inherit!important}#selectedDetail .scorecard small,#selectedDetail .scorecard .muted{opacity:.82}
 </style>
 <script id="v27-js">
 (()=>{
