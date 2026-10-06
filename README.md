@@ -27,3 +27,4 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v21: D.V. AI 채팅 — 실시간 스트리밍, ChatGPT식 마크다운(제목·목록·표·코드블록 복사·인용·링크), 중지/다시 생성/답변 복사. 키는 반드시 Vercel 환경변수 GROQ_API_KEY 로만 설정
 - v22: LaTeX 수식($..$, $$..$$, \(..\), \[..\]) KaTeX 렌더링. api/ai.js 에 키 폴백 포함 — 저장소를 공개하지 마세요
 - v23: 외부 사이트(ai.doyungo.com)로 이동하던 링크 제거, 앱 내 D.V. AI 채팅만 사용
+- v24: no-cache 헤더 추가(이전 버전 캐시로 인한 외부 이동 방지)
