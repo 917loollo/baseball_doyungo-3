@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
     const body = await r.text();
     res.status(r.status);
     res.setHeader('Content-Type', r.headers.get('content-type') || 'application/json; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=2, stale-while-revalidate=8');
     return res.send(body);
   } catch (e) {
     return res.status(502).json({ error: 'KBO API 연결 실패', detail: String(e?.message || e) });
