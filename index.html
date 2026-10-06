@@ -379,4 +379,66 @@ applyDark();drawBar();setClock();setInterval(setClock,3e4);makeDays();schedule()
 const sv=localStorage.getItem('kbo_view');show(['all','rank','my','ai'].includes(sv)?sv:'home');
 })();
 </script>
+<style id="v21-css">
+.ai-native{min-height:70vh}.ai-chat{flex:1;overflow-y:auto;scroll-behavior:smooth}
+.ai-msg.bot{max-width:94%;line-height:1.65;font-size:14px}.ai-msg.bot>*:first-child{margin-top:0}.ai-msg.bot p{margin:.55em 0}.ai-msg.bot h3,.ai-msg.bot h4,.ai-msg.bot h5,.ai-msg.bot h6{margin:.9em 0 .3em;font-size:1.05em}.ai-msg.bot h3{font-size:1.2em}
+.ai-msg.bot ul,.ai-msg.bot ol{margin:.4em 0;padding-left:1.4em}.ai-msg.bot li{margin:.2em 0}.ai-msg.bot blockquote{margin:.6em 0;padding:.2em .9em;border-left:3px solid #0a84ff;background:#0a84ff12;border-radius:0 8px 8px 0}
+.ai-msg.bot code{background:#e9eef5;border-radius:5px;padding:1px 5px;font-size:.9em;font-family:ui-monospace,Menlo,Consolas,monospace}.ai-msg.bot a{color:#0a84ff}.ai-msg.bot hr{border:0;border-top:1px solid #dbe3ed;margin:.8em 0}
+.md-c{margin:.6em 0;border-radius:12px;overflow:hidden;background:#0f1b2d;color:#e6edf7}.md-ch{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#1a2a44;font-size:11px;color:#9db2cf}.md-ch button{border:0;background:none;color:#9db2cf;font-size:11px;font-weight:800}
+.md-c pre{margin:0;padding:11px 12px;overflow-x:auto}.md-c code{background:none;padding:0;color:inherit;font-size:12.5px}
+.md-t{overflow-x:auto;margin:.6em 0}.md-t table{border-collapse:collapse;font-size:13px;min-width:60%}.md-t th,.md-t td{border:1px solid #d8e1ec;padding:6px 10px;text-align:left}.md-t th{background:#eef3f9}
+.md-act{display:flex;gap:6px;margin-top:8px}.md-act button{border:1px solid #d8e1ec;background:#fff;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:800;color:#58708f}
+.ai-send.stop{background:#e5484d}
+</style>
+<script id="v21-js">
+(()=>{
+const md=(()=>{
+const inl=s=>s.split(/(`[^`]+`)/).map((x,i)=>i%2?`<code>${x.slice(1,-1)}</code>`:x.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\s][^*]*?)\*/g,'$1<i>$2</i>').replace(/~~(.+?)~~/g,'<s>$1</s>').replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')).join('');
+const row=r=>/^\s*\|.*\|\s*$/.test(r||'');
+return s=>{s=String(s||'');if((s.match(/```/g)||[]).length%2)s+='\n```';const code=[];
+s=s.replace(/```([\w+-]*)[^\S\n]*\n?([\s\S]*?)```/g,(_,l,c)=>{code.push([l,c.replace(/\n$/,'')]);return `\u0000${code.length-1}\u0000`});
+const mt=[],mk=(x,d)=>{mt.push([x.trim(),d]);return `\u0001${mt.length-1}\u0001`};
+s=s.replace(/\$\$([\s\S]+?)\$\$/g,(_,x)=>mk(x,1)).replace(/\\\[([\s\S]+?)\\\]/g,(_,x)=>mk(x,1)).replace(/\\\(([\s\S]+?)\\\)/g,(_,x)=>mk(x,0)).replace(/(^|[^\\$\d])\$(?!\s)([^$\n]+?)(?<!\s)\$(?!\d)/g,(m,p,x)=>p+mk(x,0));
+const L=esc(s).split('\n');let o='',i=0,m;
+while(i<L.length){const l=L[i];
+ if(/^\s*$/.test(l)){i++;continue}
+ if(m=l.match(/^(#{1,4})\s+(.*)/)){const n=m[1].length+2;o+=`<h${n}>${inl(m[2])}</h${n}>`;i++;continue}
+ if(/^\s*(-{3,}|\*{3,})\s*$/.test(l)){o+='<hr>';i++;continue}
+ if(row(l)&&/^\s*\|[\s:|-]+\|\s*$/.test(L[i+1]||'')){const cells=r=>r.trim().replace(/^\||\|$/g,'').split('|').map(x=>inl(x.trim())),h=cells(l);i+=2;let b='';while(i<L.length&&row(L[i]))b+=`<tr>${cells(L[i++]).map(c=>`<td>${c}</td>`).join('')}</tr>`;o+=`<div class="md-t"><table><thead><tr>${h.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${b}</tbody></table></div>`;continue}
+ if(/^\s*&gt;/.test(l)){const q=[];while(i<L.length&&/^\s*&gt;/.test(L[i]))q.push(L[i++].replace(/^\s*&gt;\s?/,''));o+=`<blockquote>${inl(q.join('<br>'))}</blockquote>`;continue}
+ if(/^\s*([-*+]|\d+[.)])\s+/.test(l)){const ord=/^\s*\d/.test(l);let it='';while(i<L.length&&(m=L[i].match(/^\s*(?:[-*+]|\d+[.)])\s+(.*)/))){it+=`<li>${inl(m[1])}</li>`;i++}o+=ord?`<ol>${it}</ol>`:`<ul>${it}</ul>`;continue}
+ const p=[];while(i<L.length&&!/^\s*$/.test(L[i])&&!/^(#{1,4}\s|\s*([-*+]|\d+[.)])\s|\s*&gt;|\s*\|)/.test(L[i])&&!/^\u0000\d+\u0000$/.test(L[i]))p.push(L[i++]);
+ if(!p.length)p.push(L[i++]);
+ o+=`<p>${inl(p.join('<br>'))}</p>`}
+return o.replace(/\u0001(\d+)\u0001/g,(_,n)=>{const [x,d]=mt[+n]||['',0];try{if(window.katex)return katex.renderToString(x,{displayMode:!!d,throwOnError:false})}catch(e){}return `<code>${esc(x)}</code>`}).replace(/<p>\u0000(\d+)\u0000<\/p>/g,'\u0000$1\u0000').replace(/\u0000(\d+)\u0000/g,(_,n)=>{const [l,c]=code[+n]||['',''];return `<div class="md-c"><div class="md-ch"><span>${esc(l||'code')}</span><button data-copy>복사</button></div><pre><code>${esc(c)}</code></pre></div>`})}})();
+aiAdd=function(t,who='bot'){const b=$('#aiChat');if(!b)return;const d=document.createElement('div');d.className='ai-msg '+who;d.dataset.raw=t;if(who==='bot')d.innerHTML=md(t);else d.textContent=t;b.appendChild(d);b.scrollTop=b.scrollHeight;return d};
+const hist=()=>{const h=[...$('#aiChat').querySelectorAll('.ai-msg')].filter(e=>e.dataset.raw).map(e=>({role:e.classList.contains('user')?'user':'assistant',content:e.dataset.raw}));const k=h.findIndex(x=>x.role==='user');return k<0?[]:h.slice(k).slice(-10)};
+const acts=el=>{el.querySelector('.md-act')?.remove();document.querySelectorAll('#aiChat .md-act [data-regen]').forEach(b=>b.remove());el.insertAdjacentHTML('beforeend','<div class="md-act"><button data-cm>복사</button><button data-regen>↻ 다시 생성</button></div>')};
+let busy=false,ctl=null;
+sendDVMessage=async function(redo){const btn=document.querySelector('.ai-send'),inp=$('#aiInput');
+ if(busy){ctl?.abort();return}
+ let q;const box=$('#aiChat');
+ if(typeof redo==='string'){q=redo;[...box.querySelectorAll('.ai-msg')].slice(-2).forEach(e=>e.remove())}else{q=inp.value.trim();if(!q)return;inp.value=''}
+ const history=hist();aiAdd(q,'user');const el=aiAdd('','bot');el.innerHTML='<span class="ai-typing"><i></i><i></i><i></i></span>';
+ busy=true;ctl=new AbortController();btn.textContent='■ 중지';btn.classList.add('stop');let acc='';
+ try{await ensureSeason().catch(()=>{});
+  const r=await fetch('/api/ai',{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({stream:true,model:$('#aiModel')?.value||'openai/gpt-oss-20b',messages:[{role:'system',content:`당신은 D.V.입니다. 한국어로 정확하고 친절하게 답하세요. 마크다운(제목, 목록, 표, 코드블록)을 자유롭게 사용하고, 수식은 LaTeX($...$ 인라인, $$...$$ 블록)로 작성하세요. ${currentGameContext()}`},...history,{role:'user',content:q}]})});
+  if(!r.ok){let d={};try{d=await r.json()}catch{}throw Error(d.error||'AI 서버 오류 '+r.status)}
+  const rd=r.body.getReader(),dec=new TextDecoder();
+  for(;;){const {done,value}=await rd.read();if(done)break;acc+=dec.decode(value,{stream:true});el.innerHTML=md(acc);el.dataset.raw=acc;box.scrollTop=box.scrollHeight}
+  if(!acc.trim()){el.innerHTML=md('응답이 비어 있습니다.');el.dataset.raw=''}else acts(el)
+ }catch(e){if(e.name==='AbortError'){el.innerHTML=md(acc||'_(중지됨)_');el.dataset.raw=acc;if(acc)acts(el)}else{el.innerHTML=md('⚠️ '+e.message);el.dataset.raw=''}}
+ finally{busy=false;ctl=null;btn.textContent='전송';btn.classList.remove('stop')}};
+$('#aiChat').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+ const cp=async t=>{try{await navigator.clipboard.writeText(t);const o=b.textContent;b.textContent='복사됨 ✓';setTimeout(()=>b.textContent=o,1200)}catch{}};
+ if(b.dataset.copy!==undefined)cp(b.closest('.md-c').querySelector('code').textContent);
+ else if(b.dataset.cm!==undefined)cp(b.closest('.ai-msg').dataset.raw);
+ else if(b.dataset.regen!==undefined){const u=[...$('#aiChat').querySelectorAll('.ai-msg.user')].at(-1);if(u&&!busy)sendDVMessage(u.dataset.raw)}});
+const g=$('#aiChat .ai-msg');if(g&&!g.dataset.raw)g.dataset.raw='';
+})();
+</script>
+<script id="v22-katex">
+(()=>{const l=document.createElement('link');l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css';document.head.appendChild(l);
+const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js';s.onload=()=>{document.querySelectorAll('#aiChat .ai-msg.bot').forEach(e=>{if(e.dataset.raw&&/\$|\\[(\[]/.test(e.dataset.raw)&&!e.querySelector('.md-act'))e.dataset.raw&&(e.dataset.rerender=1)});window.__katexReady=1;document.dispatchEvent(new Event('katex-ready'))};document.head.appendChild(s)})();
+</script>
 </body></html>

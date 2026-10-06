@@ -24,3 +24,5 @@ Do not put the key in `index.html`. The key included in any previous public HTML
 AI features: current-game context, MY-team context, game-flow analysis, summary, viewing points, team comparison, and baseball-term explanations.
 
 - v20: 초기화·자동 새로고침(3/5/10/30초·끔) 복구, 다크 모드, 팀 필터, MY팀·즐겨찾기 경기 알림(득점/시작/종료), 경기 인사이트(승리 확률·상대전적·최근 흐름·공유), 순위 상세 기록(승차·최근5·연속·득실·피타고리안·홈/원정), MY 팀 대시보드, D.V. AI 실제 경기·순위 컨텍스트 + 대화 기억 + 추천 질문
+- v21: D.V. AI 채팅 — 실시간 스트리밍, ChatGPT식 마크다운(제목·목록·표·코드블록 복사·인용·링크), 중지/다시 생성/답변 복사. 키는 반드시 Vercel 환경변수 GROQ_API_KEY 로만 설정
+- v22: LaTeX 수식($..$, $$..$$, \(..\), \[..\]) KaTeX 렌더링. api/ai.js 에 키 폴백 포함 — 저장소를 공개하지 마세요
