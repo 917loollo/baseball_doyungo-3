@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>배포 진단</title>
+<style>
+body{font:14px/1.6 -apple-system,Segoe UI,sans-serif;margin:0;padding:16px;background:#f3f6fa;color:#10213b}
+h1{font-size:18px;margin:0 0 4px}p{margin:4px 0 12px;color:#58708f}
+.r{background:#fff;border:1px solid #dce4ee;border-radius:12px;padding:10px 12px;margin:8px 0;word-break:break-all}
+.ok{border-left:5px solid #18b65a}.no{border-left:5px solid #e5484d}.wn{border-left:5px solid #ff8916}
+code{background:#eef3f8;padding:1px 5px;border-radius:5px;font-size:12px}
+button{border:0;background:#0a84ff;color:#fff;border-radius:999px;padding:9px 16px;font-weight:700;font-size:13px}
+pre{white-space:pre-wrap;margin:6px 0 0;font-size:12px;color:#44566f}
+</style></head><body>
+<h1>🔧 배포 진단</h1><p>이 페이지를 연 주소: <code id="where"></code></p>
+<button id="copy">결과 복사</button>
+<div id="out"></div>
+<script>
+const out=document.getElementById('out'),log=[];
+document.getElementById('where').textContent=location.origin;
+const add=(cls,title,detail)=>{const d=document.createElement('div');d.className='r '+cls;d.innerHTML='<b>'+(cls==='ok'?'✅ ':cls==='no'?'❌ ':'⚠️ ')+title+'</b>'+(detail?'<pre></pre>':'');if(detail)d.querySelector('pre').textContent=detail;out.appendChild(d);log.push((cls==='ok'?'[OK] ':cls==='no'?'[FAIL] ':'[WARN] ')+title+(detail?'\n   '+detail:''))};
+const get=async(u,o)=>{try{const r=await fetch(u,Object.assign({cache:'no-store'},o||{})),t=await r.text();return{s:r.status,t}}catch(e){return{s:0,t:String(e)}}};
+const snip=t=>t.replace(/\s+/g,' ').slice(0,140);
+(async()=>{
+ // 1) 배포된 index.html 안의 API 주소 찾기
+ const h=await get('/');
+ if(h.s!==200)add('no','메인 페이지 불러오기 실패 (HTTP '+h.s+')',snip(h.t));
+ else{
+  const paths=[...new Set((h.t.match(/\/api\/[A-Za-z0-9_-]+/g)||[]))];
+  add(paths.length?'ok':'no','index.html 이 호출하는 API 주소',paths.join('\n')||'/api/... 주소를 찾지 못했습니다');
+  const bad=paths.filter(p=>!['/api/kbo','/api/daum','/api/ai','/api/player-image'].includes(p));
+  if(bad.length)add('no','이름이 바뀐 API 주소가 있습니다 → 원인일 가능성 큼',bad.join(', ')+'\n(api 폴더의 파일 이름은 kbo.js / daum.js / ai.js / player-image.js 입니다)');
+  add(/id="v3[0-9]|id="v2[0-9]|id="v20/.test(h.t)?'ok':'wn','최신 버전(v20 이상) 코드 포함 여부',/id="v2[0-9]|id="v3[0-9]/.test(h.t)?'포함됨':'확인 불가 — 예전 index.html 일 수 있음');
+ }
+ // 2) 함수 존재 여부
+ const t1=await get('/api/kbo?path='+encodeURIComponent('/'));
+ add(t1.s===404&&/NOT_FOUND|could not be found/i.test(t1.t)?'no':(t1.s?'ok':'no'),'/api/kbo 함수 (HTTP '+t1.s+')',t1.s===404&&/NOT_FOUND|could not be found/i.test(t1.t)?'Vercel 이 이 주소를 찾지 못함 → api/kbo.js 가 배포되지 않았거나 이름이 다릅니다\n'+snip(t1.t):'함수는 살아 있음(네이버 응답): '+snip(t1.t));
+ // 3) 실제 경기 데이터
+ const d=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+ const t2=await get('/api/kbo?path='+encodeURIComponent('/schedule/games?upperCategoryId=kbaseball&fromDate='+d+'&toDate='+d));
+ let n=null;try{const j=JSON.parse(t2.t);const r=j.result||j;n=(r.games||r.scheduleGames||[]).length}catch(e){}
+ add(n!=null?'ok':'no','오늘('+d+') 경기 데이터 (HTTP '+t2.s+')',n!=null?n+'경기 조회됨':snip(t2.t));
+ // 4) 나머지 함수
+ const t3=await get('/api/daum?gameId=0');add(t3.s&&!(t3.s===404&&/NOT_FOUND/i.test(t3.t))?'ok':'no','/api/daum (HTTP '+t3.s+')',snip(t3.t));
+ const t4=await get('/api/player-image?playerId=1');add(t4.s&&!(t4.s===404&&/NOT_FOUND/i.test(t4.t))?'ok':'no','/api/player-image (HTTP '+t4.s+')',t4.s===404?'(404 이더라도 선수 번호가 없을 뿐이면 함수는 정상)':'');
+ const t5=await get('/api/ai');add(t5.s===405?'ok':'no','/api/ai (HTTP '+t5.s+')',t5.s===405?'GET 은 405 가 정상(함수 존재)':snip(t5.t));
+ // 5) 브라우저 저장 데이터
+ add('ok','진단 완료','이 화면을 캡처하거나 [결과 복사]를 눌러 붙여넣어 주세요.');
+})();
+document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+'\n'+log.join('\n'));alert('복사했어요')}catch{alert('복사에 실패했어요. 화면을 캡처해 주세요.')}};
+</script></body></html>
