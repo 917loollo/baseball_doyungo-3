@@ -1,6 +1,8 @@
 {
   "functions": {
     "api/kbo.js": {"maxDuration": 10},
+    "api/daum.js": {"maxDuration": 10},
+    "api/ai.js": {"maxDuration": 30},
     "api/player-image.js": {"maxDuration": 10}
   }
 }

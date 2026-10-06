@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({error:'Method not allowed'});
   const key = process.env.GROQ_API_KEY;
   if (!key) return res.status(500).json({error:'GROQ_API_KEY 환경변수가 설정되지 않았습니다.'});
@@ -15,4 +15,4 @@ export default async function handler(req, res) {
     if (!response.ok) return res.status(response.status).json({error:data?.error?.message||'Groq API 오류'});
     return res.status(200).json({reply:data?.choices?.[0]?.message?.content||''});
   } catch (e) { return res.status(500).json({error:e.message||'AI 서버 오류'}); }
-}
+};
