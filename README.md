@@ -35,4 +35,3 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v29: 선수 얼굴 사진 표시(라인업·선발·현재 투수/타자·투수 기록), 사진 없으면 기본 실루엣, 이미지 API 캐시
 - v30: /api/kbo JSON 검증·재시도·최근 응답 대체, 오류 메시지에 HTTP 상태 표시, 지난 달 일정 저장본 사용
 - v31: AI 전송 시 ensureSeason is not defined 오류 수정
-- v32: 화면 갱신을 DOM 병합 방식으로 변경 — 로고·선수 사진이 꺼졌다 켜지는 깜빡임 제거
