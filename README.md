@@ -28,3 +28,5 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v22: LaTeX 수식($..$, $$..$$, \(..\), \[..\]) KaTeX 렌더링. api/ai.js 에 키 폴백 포함 — 저장소를 공개하지 마세요
 - v23: 외부 사이트(ai.doyungo.com)로 이동하던 링크 제거, 앱 내 D.V. AI 채팅만 사용
 - v24: no-cache 헤더 추가(이전 버전 캐시로 인한 외부 이동 방지)
+- v25: /api/ai 가 없는 호스팅에서도 브라우저에서 Groq 직접 호출(키가 페이지에 노출되므로 공개 배포 시 주의)
+- v26: 스트라이크존 모서리 둥글게 + 실제 비율(폭 17인치 기준, 높이는 타자 신장별 존 높이)
