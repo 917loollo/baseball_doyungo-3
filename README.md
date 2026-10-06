@@ -36,3 +36,4 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v30: /api/kbo JSON 검증·재시도·최근 응답 대체, 오류 메시지에 HTTP 상태 표시, 지난 달 일정 저장본 사용
 - v31: AI 전송 시 ensureSeason is not defined 오류 수정
 - v32: 화면 갱신을 DOM 병합 방식으로 변경 — 로고·선수 사진이 꺼졌다 켜지는 깜빡임 제거
+- v33: /api 미배포(404) 시 원인 안내 문구
