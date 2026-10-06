@@ -11,11 +11,14 @@
     },
     "api/player-image.js": {
       "maxDuration": 10
+    },
+    "api/doyungo.js": {
+      "maxDuration": 10
     }
   },
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "headers": [
         {
           "key": "Cache-Control",
