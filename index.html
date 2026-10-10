@@ -539,7 +539,7 @@ function paint(id,d){const r=parse(d);if(!(r.away||r.home||r.sa||r.sh))return fa
  const g=todayGames.find(x=>String(x.gameId)===String(id))||{},a=short(V(g,'awayTeamName')||'원정'),h=short(V(g,'homeTeamName')||'홈');
  box.innerHTML=`<div class="card panel" style="margin-top:12px"><div class="pt">라인업 <small class="muted">빠른 조회</small></div><div class="pb"><div class="lineups">${col(a,r.away,r.sa,r.sao)}${col(h,r.home,r.sh,r.sho)}</div></div></div>`;done[id]=1;return true}
 function fast(id){if(done[id]||Date.now()-(tried[id]||0)<15000)return;tried[id]=Date.now();
- api(`/schedule/games/${encodeURIComponent(id)}/preview`).then(d=>paint(id,d)||Promise.reject()).catch(()=>api(`/schedule/games/${encodeURIComponent(id)}/relay`).then(d=>paint(id,d)||Promise.reject()).catch(()=>{if(!done[id]&&String(id)===String(selectedId)&&!$('#selectedDetail .player'))box.innerHTML='<div class="card panel" style="margin-top:12px"><div class="pt">라인업</div><div class="pb muted">아직 라인업 정보를 받지 못했어요. 발표되면 자동으로 표시됩니다.</div></div>'}))}
+ api(`/schedule/games/${encodeURIComponent(id)}/preview`).then(d=>paint(id,d)||Promise.reject()).catch(()=>api(`/schedule/games/${encodeURIComponent(id)}/relay`).then(d=>paint(id,d)||Promise.reject()).catch(()=>{}))}
 const _l=loadDetail;loadDetail=async function(id){fast(id);await _l(id);if($('#selectedDetail .player'))box.innerHTML='';else if(String(id)!==String(selectedId))box.innerHTML=''};
 fast(selectedId);
 })();
@@ -640,5 +640,14 @@ setLive(selectedDate===today()&&liveIn(todayGames));
 const chk=()=>{if(!document.hidden&&selectedDate!==today())fetchSchedule(today(),today()).catch(()=>{})};
 if(selectedDate!==today())chk();setInterval(chk,30000);
 })();
+</script>
+<style id="v43-css">
+html[data-fastlineup="1"] #selectedDetail .card.panel:has(.lineups .empty){display:none}
+#v28lineup .card{margin-top:0}
+</style>
+<script id="v43-js">
+(()=>{const b=document.getElementById('v28lineup');if(!b)return;
+const f=()=>{document.documentElement.dataset.fastlineup=b.querySelector('.lineups')?'1':'0'};
+new MutationObserver(f).observe(b,{childList:true,subtree:true});f()})();
 </script>
 </body></html>
