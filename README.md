@@ -39,3 +39,7 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v33: /api 미배포(404) 시 원인 안내 문구
 - v34: 화면 문구 DOYUNGO 로 통일, /api/kbo·/api/doyungo 모두 지원(자동 전환), diag.html 포함
 - v35: 이닝/상태 알약 글자색 복구, 선수 사진 다중 출처(네이버·KBO) 병렬 조회
+- v36: 홈 화면 앱(PWA) 지원, 사진 없을 때 이름 첫 글자 아바타, 점수 변화 강조·진동, 갱신 시각·새로고침 버튼
+- v37: UI 전면 개편(유리 질감·모바일 하단 탭바·새 타이포), 이닝 표기 1회초 수정, 경기 전에는 "경기 예정"만 표시
+- v38: 코드에 넣어 둔 AI 키 제거(키는 Vercel 환경변수 GROQ_API_KEY 로만), Invalid API Key 안내 문구
+- v39: 라인업 필드 대소문자 무시·별칭 확대, 빠른 라인업 파서 완화·안내 문구, diag 라인업 구조 점검

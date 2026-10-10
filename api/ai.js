@@ -1,8 +1,8 @@
 // Groq 프록시 (키는 Vercel 환경변수 GROQ_API_KEY 에만 둡니다). stream:true 면 텍스트를 실시간 전달.
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  // 환경변수가 있으면 그것을 우선 사용합니다. 이 저장소를 공개(GitHub public)로 올리지 마세요.
-  const key = process.env.GROQ_API_KEY || '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';
+  // 키는 코드에 넣지 말고 Vercel 환경변수 GROQ_API_KEY 로만 설정하세요.
+  const key = process.env.GROQ_API_KEY;
   if (!key) return res.status(500).json({ error: 'GROQ_API_KEY 환경변수가 설정되지 않았습니다.' });
   try {
     const { model = 'openai/gpt-oss-20b', messages = [], stream = false } = req.body || {};

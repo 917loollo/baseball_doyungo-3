@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="ko">
 <head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="manifest" href="/manifest.json"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta name="theme-color" content="#17213d"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="DOYUNGO"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://sports-phinf.pstatic.net" crossorigin>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>DOYUNGO LIVE</title>
@@ -125,7 +127,7 @@ body:before{content:"";position:fixed;inset:-20%;pointer-events:none;background:
 <section id="ai" class="hidden"><div class="rankhero"><div><div class="eyebrow">DOYUNGO AI</div><h1>D.V. AI</h1><p>지금 보고 있는 경기와 MY 팀 정보를 함께 사용해 질문할 수 있습니다.</p></div><div class="glass-orb">✦</div></div><div class="ai-layout"><div class="card ai-card ai-native"><div class="ai-native-head"><div><b>⚡ D.V. Engine</b><small>DOYUNGO 경기센터 연결</small></div><select id="aiModel" class="ai-model"><option value="openai/gpt-oss-20b">GPT-OSS 20B · 빠른 답변</option><option value="openai/gpt-oss-120b">GPT-OSS 120B · 고성능</option></select></div><div id="aiContext" class="ai-context"></div><div id="aiChat" class="ai-chat"></div><div class="ai-input"><textarea id="aiInput" placeholder="DOYUNGO 경기, 팀, 선수에 대해 질문해 보세요. Enter로 전송"></textarea><button class="ai-send" onclick="sendDVMessage()">전송</button></div></div><div class="card ai-card"><div class="ai-head"><div><b>빠른 AI 기능</b><span>현재 보고 있는 경기 기준</span></div><button class="glass-btn" onclick="openAI()">💬 질문하기</button></div><div class="ai-tools"><button class="ai-tool" onclick="useAIQuick('현재 선택한 경기의 흐름을 분석하고 핵심 장면을 알려줘.')">📊 경기 흐름 분석</button><button class="ai-tool" onclick="useAIQuick('현재 선택한 경기 상황을 초보자도 이해하기 쉽게 요약해줘.')">📝 경기 요약</button><button class="ai-tool" onclick="useAIQuick('현재 경기에서 앞으로 주목할 포인트 3가지를 알려줘.')">👀 관전 포인트</button><button class="ai-tool" onclick="useAIQuick('내 MY 팀의 현재 경기 상황과 관전 포인트를 알려줘.')">⭐ MY 팀 분석</button><button class="ai-tool" onclick="useAIQuick('현재 경기에서 알아두면 좋은 야구 용어를 쉽게 설명해줘.')">💡 야구 용어</button><button class="ai-tool" onclick="useAIQuick('현재 선택 경기의 양 팀 전력을 객관적으로 비교해줘.')">⚾ 양 팀 비교</button></div><div class="pb"><div class="ai-note">AI 질문에는 현재 선택한 날짜, 경기, MY 팀 정보가 자동으로 포함됩니다.</div></div></div></div></section>
 </main>
 <script>
-const $=s=>document.querySelector(s),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),A=x=>Array.isArray(x)?x:(x&&typeof x==='object'?Object.values(x):[]),V=(o,...ks)=>{for(const k of ks)if(o&&o[k]!==undefined&&o[k]!==null&&o[k]!=='')return o[k];return null};
+const $=s=>document.querySelector(s),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),A=x=>Array.isArray(x)?x:(x&&typeof x==='object'?Object.values(x):[]),V=(o,...ks)=>{if(!o||typeof o!=='object')return null;for(const k of ks)if(o[k]!==undefined&&o[k]!==null&&o[k]!=='')return o[k];let m=o.__lk;if(!m){m={};try{for(const x in o)m[x.toLowerCase()]=x;Object.defineProperty(o,'__lk',{value:m,enumerable:false})}catch(e){}}for(const k of ks){const x=m[String(k).toLowerCase()];if(x!==undefined&&o[x]!==undefined&&o[x]!==null&&o[x]!=='')return o[x]}return null};
 function playerList(x){
   if(Array.isArray(x)) return x.filter(Boolean);
   if(!x) return [];
@@ -137,7 +139,7 @@ function playerList(x){
   }
   return A(x).filter(Boolean);
 }
-function pcode(x){return V(x,'pcode','playerId','id','batterId','pitcherId','code','playerCode')}
+function pcode(x){return V(x,'pcode','playerId','id','batterId','pitcherId','code','playerCode','playerNo','pno')}
 function unwrapRelay(x){
   if(!x) return {};
   return x.textRelayData || x.relayData || x.data?.textRelayData || x.result?.textRelayData || x;
@@ -162,7 +164,7 @@ function pitchView(r,c,batter,pitch,pid,away,home,half,ing,dm){let lastText=dm&&
  let lastTxt=lastText||(last?[ps.length+'구',last.res==='B'?'볼':last.res==='T'?'스트라이크':last.res==='S'?'헛스윙':last.res==='F'?'파울':last.res==='H'?'타격':'',last.speed?last.speed+'km/h':'',last.stuff||''].filter(Boolean).join(' '):'타석 대기');
  let base=(cx,cy,o)=>`<rect class="${o?'on':''}" x="${cx-8}" y="${cy-8}" width="16" height="16" transform="rotate(45 ${cx} ${cy})"/>`;
  let out=Number(V(c,'out'))||0;
- return `<div class="pv"><div class="pv-top"><div class="pv-pl"><div><span>투수</span><b>${playerPhoto(pitch)}${esc(name(pitch))}</b><i>${esc(pc!=null?pc+'구':'')}</i></div><div><span class="bt">타자</span><b>${playerPhoto(batter)}${esc(name(batter))}</b><i>${esc(lastTxt)}</i></div></div><div class="pv-sc"><div class="pv-in">${String(half)==='0'?'▲':'▼'}<b>${esc(ing||'')}</b></div><div class="pv-tm"><div><em>${esc(short(away))}</em><b>${esc(sc('away'))}</b></div><div class="h"><em>${esc(short(home))}</em><b>${esc(sc('home'))}</b></div></div><div class="pv-bs"><svg viewBox="0 0 60 44" width="60" height="44">${base(30,12,on('base2'))}${base(46,26,on('base1'))}${base(14,26,on('base3'))}</svg><div>${esc(V(c,'ball')??0)}-${esc(V(c,'strike')??0)}<small>${out} OUT</small></div></div></div></div><svg class="pv-z" viewBox="0 0 270 300" preserveAspectRatio="xMidYMid meet"><rect class="bg" width="270" height="300"/><defs><clipPath id="szc"><rect x="${L}" y="${T}" width="${W}" height="${H}" rx="12"/></clipPath></defs><rect class="zn" x="${L}" y="${T}" width="${W}" height="${H}" rx="12"/><g class="gl" clip-path="url(#szc)">${lines}</g><path class="hp" d="M120 280 l15 -8 h0 l15 8 l-6 8 h-18z" transform="translate(0 -6)"/>${dots}${ps.length?'':`<text class="nodata" x="135" y="60">투구 추적 데이터 대기 중</text>`}</svg></div>`}
+ return `<div class="pv"><div class="pv-top"><div class="pv-pl"><div><span>투수</span><b>${playerPhoto(pitch)}${esc(name(pitch))}</b><i>${esc(pc!=null?pc+'구':'')}</i></div><div><span class="bt">타자</span><b>${playerPhoto(batter)}${esc(name(batter))}</b><i>${esc(lastTxt)}</i></div></div><div class="pv-sc"><div class="pv-in">${ing?`${String(half)==='0'?'▲':'▼'}<b>${esc(ing)}</b>`:'<b>경기 예정</b>'}</div><div class="pv-tm"><div><em>${esc(short(away))}</em><b>${esc(sc('away'))}</b></div><div class="h"><em>${esc(short(home))}</em><b>${esc(sc('home'))}</b></div></div><div class="pv-bs"><svg viewBox="0 0 60 44" width="60" height="44">${base(30,12,on('base2'))}${base(46,26,on('base1'))}${base(14,26,on('base3'))}</svg><div>${esc(V(c,'ball')??0)}-${esc(V(c,'strike')??0)}<small>${out} OUT</small></div></div></div></div><svg class="pv-z" viewBox="0 0 270 300" preserveAspectRatio="xMidYMid meet"><rect class="bg" width="270" height="300"/><defs><clipPath id="szc"><rect x="${L}" y="${T}" width="${W}" height="${H}" rx="12"/></clipPath></defs><rect class="zn" x="${L}" y="${T}" width="${W}" height="${H}" rx="12"/><g class="gl" clip-path="url(#szc)">${lines}</g><path class="hp" d="M120 280 l15 -8 h0 l15 8 l-6 8 h-18z" transform="translate(0 -6)"/>${dots}${ps.length?'':`<text class="nodata" x="135" y="60">투구 추적 데이터 대기 중</text>`}</svg></div>`}
 function pitchCount0(r,pid){let n=pitcherCount(r,pid);return n||null}
 
 const api=async p=>{let last;for(let n=0;n<2;n++){try{const r=await fetch((window.__kb||'/api/kbo')+'?path='+encodeURIComponent(p),{cache:'no-store'}),t=await r.text();let j;try{j=JSON.parse(t)}catch{throw Error(r.status===404?'서버 함수(/api/kbo)를 찾을 수 없습니다. api 폴더가 index.html과 같은 위치에 함께 배포됐는지 확인하세요 (HTTP 404)':'API 응답을 읽을 수 없습니다 (HTTP '+r.status+(t?' · '+t.replace(/\s+/g,' ').slice(0,50):'')+')')}if(!r.ok)throw Error(j.error||('API '+r.status));return j.result??j}catch(e){last=e;if(/HTTP 404/.test(e.message))window.__kb=window.__kb==='/api/doyungo'?'/api/kbo':'/api/doyungo';if(!n)await new Promise(r=>setTimeout(r,700))}}throw last};
@@ -175,6 +177,7 @@ function teamLogoUrl(n){let s=short(n);return `https://sports-phinf.pstatic.net/
 function teamLogoDaum(n){let s=short(n),c=teamDaumCode[s]||'NC';return `https://img1.daumcdn.net/thumb/R150x150/?fname=${encodeURIComponent(`http://t1.daumcdn.net/media/img-section/sports13/logo/team/1/${c}_300300.png`)}`}
 function badge(n,mini=false){let s=short(n),c=colors[s]||'#68798d',cls=mini?'mini':'badge';return `<span class="${cls} logo-circle" style="--team:${c}"><img class="asset-logo" src="${teamLogoUrl(s)}" data-fallback="${teamLogoDaum(s)}" alt="${esc(s)}" onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback=''}else{this.style.display='none';this.nextElementSibling.style.display='block'}"><span class="logoFallback">${esc(s.slice(0,3))}</span></span>`}
 function score(g,s){return V(g,s+'TeamScore',s+'Score',s+'ScoreValue')??'-'}
+function fixInn(s,half){s=String(s??'');const n=(s.match(/\d+/)||[''])[0];if(!n)return '';const h=/말/.test(s)?'말':/초/.test(s)?'초':(String(half)==='0'?'초':String(half)==='1'?'말':'');return n+'회'+h}
 function status(g){let x=String(V(g,'statusCode','status','gameStatus')||'').toUpperCase();if(/RESULT|END|FINAL|FINISH/.test(x))return ['end','경기 종료'];if(/START|LIVE|ING/.test(x))return ['live','LIVE'];return ['pre','경기 예정']}
 function valid(g){let a=V(g,'awayTeamName','awayName'),h=V(g,'homeTeamName','homeName');return g?.gameId&&a&&h&&a!=='-'&&h!=='-'&&V(g,'categoryId')==='kbo'}
 function unique(a){let m=new Map();A(a).forEach(g=>{if(valid(g))m.set(String(g.gameId),g)});return [...m.values()]}
@@ -245,11 +248,12 @@ function stat(g,r,s){let p=s==='away'?'away':'home',c=r.currentGameState||{},arr
 function inningVals(r,side){let raw=V(r,'inningScore','inningScores')||{};let v=raw?.[side]??raw?.[side+'Score'];if(Array.isArray(v))return v.map(x=>typeof x==='object'?(V(x,'score','value','run')??'-'):x);if(v&&typeof v==='object'){let ks=Object.keys(v).filter(k=>/^\d+$/.test(k)).sort((a,b)=>+a-+b);return ks.map(k=>typeof v[k]==='object'?(V(v[k],'score','value','run')??'-'):v[k])}if(typeof v==='string'){let a=v.split(/\s*,\s*/);return a.length>=1?a:[]}return []}
 function inningTable(r,g){let a=inningVals(r,'away'),h=inningVals(r,'home'),n=Math.max(9,a.length,h.length),as=stat(g,r,'away'),hs=stat(g,r,'home');let head='<th>팀</th>'+Array.from({length:n},(_,i)=>`<th>${i+1}</th>`).join('')+'<th>R</th><th>H</th><th>E</th><th>B</th>';let row=(name,v,s)=>`<tr><td>${esc(name)}</td>${Array.from({length:n},(_,i)=>`<td>${esc(v[i]??'-')}</td>`).join('')}<td>${esc(s.r??'-')}</td><td>${esc(s.h??'-')}</td><td>${esc(s.e??'-')}</td><td>${esc(s.b??'-')}</td></tr>`;return `<div class="scroll"><table class="inning"><thead><tr>${head}</tr></thead><tbody>${row(V(g,'awayTeamName'),a,as)}${row(V(g,'homeTeamName'),h,hs)}</tbody></table></div>`}
 function find(list,id){if(id==null||id==='')return null;let sid=String(id);return playerList(list).find(x=>String(pcode(x)??'')===sid)||playerList(list).find(x=>String(V(x,'name','playerName')??'')===sid)||null}
-function name(x){return typeof x==='string'?(x||'-'):V(x,'name','playerName','batterName','pitcherName')||'-'}
+function name(x){return typeof x==='string'?(x||'-'):V(x,'name','playerName','batterName','pitcherName','playerNm','pName','pNm','nm')||'-'}
 function playerPhotoUrl(p){let id=pcode(p);if(!id)return '';let direct=V(p,'imageUrl','profileImageUrl','playerImageUrl','photoUrl','image','playerImage','profileImage','imgUrl','pImgUrl','photo','playerImgUrl');if(direct)return direct;return `/api/player-image?playerId=${encodeURIComponent(id)}`}
 const PH_FB="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" fill="#e6edf5"/><circle cx="24" cy="19" r="8" fill="#a9b8cb"/><path d="M8 48c2-12 10-17 16-17s14 5 16 17z" fill="#a9b8cb"/></svg>');
-function playerPhoto(p,lg){const u=playerPhotoUrl(p),c='playerphoto'+(lg?' lg':'');return u?`<img class="${c}" src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=PH_FB">`:`<img class="${c}" src="${PH_FB}" alt="">`}
-function lineup(list){let a=playerList(list);return a.length?a.slice(0,12).map((p,i)=>`<div class="player"><span>${esc(V(p,'batOrder','order','no')??i+1)}</span><div class="playerrow">${playerPhoto(p)}<b>${esc(name(p))}</b></div><small>${esc(V(p,'posName','position','pos')||'')}</small></div>`).join(''):'<div class="empty">라인업 없음</div>'}
+function phInit(p){const n=String(name(p)||'').trim()[0]||'?';return "data:image/svg+xml,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b7ba6"/><stop offset="1" stop-color="#2b3f63"/></linearGradient></defs><rect width="48" height="48" fill="url(#g)"/><text x="24" y="32" font-size="22" font-weight="700" text-anchor="middle" fill="#fff" font-family="sans-serif">${esc(n)}</text></svg>`)}
+function playerPhoto(p,lg){const u=playerPhotoUrl(p),c='playerphoto'+(lg?' lg':''),f=phInit(p);return u?`<img class="${c}" src="${esc(u)}" data-f="${f}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=this.dataset.f">`:`<img class="${c}" src="${f}" alt="">`}
+function lineup(list){let a=playerList(list);return a.length?a.slice(0,12).map((p,i)=>`<div class="player"><span>${esc(V(p,'batOrder','order','no','seqno','battingOrder','bo')??i+1)}</span><div class="playerrow">${playerPhoto(p)}<b>${esc(name(p))}</b></div><small>${esc(V(p,'posName','position','pos','positionName','posNm','positionNm')||'')}</small></div>`).join(''):'<div class="empty">라인업 없음</div>'}
 function bases(c,awayBatters,homeBatters,half){let batting=String(half)==='0'?playerList(awayBatters):playerList(homeBatters);let runnerAt=k=>{let raw=V(c,k);if(raw==null||String(raw)==='0'||String(raw)==='')return null;return playerList(batting).find(x=>String(V(x,'batOrder','order','no'))===String(raw))||null};let r1=runnerAt('base1'),r2=runnerAt('base2'),r3=runnerAt('base3');let on=k=>!!runnerAt(k);return `<div class="diamondwrap"><div class="diamond"><div class="base b1 ${on('base1')?'on':''}"></div><div class="base b2 ${on('base2')?'on':''}"></div><div class="base b3 ${on('base3')?'on':''}"></div><div class="homebase"></div><b class="bn n2">${esc(r2?name(r2):'')}</b><b class="bn n1">${esc(r1?name(r1):'')}</b><b class="bn n3">${esc(r3?name(r3):'')}</b><div class="baselabel">BASE</div></div><div class="runnerlabels"><span>1루 ${esc(r1?name(r1):'없음')}</span><span>2루 ${esc(r2?name(r2):'없음')}</span><span>3루 ${esc(r3?name(r3):'없음')}</span></div><div class="countrow">B ${esc(V(c,'ball')??'-')} · S ${esc(V(c,'strike')??'-')} · O ${esc(V(c,'out')??'-')}</div></div>`}
 function plays(r,away,home){let out=[],seen=new Set();A(V(r,'textRelays','relays')).forEach(z=>{let t=A(V(z,'textOptions','options','texts')).map(o=>V(o,'text','textValue','content')).filter(Boolean).join(' ');if(t&&!seen.has(t)){seen.add(t);out.push([V(z,'inning','inn','no','seq','sequence'),t,String(V(z,'homeOrAway')||'')])}});return out.slice(-18).reverse().map((x,i)=>{let team=x[2]==='1'?home:x[2]==='0'?away:(i%2?home:away);return `<div class="play"><span class="inningno">${esc(x[0]??'')}</span><span class="teamtag ${team===home?'red':'blue'}">${esc(short(team))}</span><span>${esc(x[1])}</span><span style="text-align:right;color:#8998aa">-</span></div>`}).join('')||'<div class="empty">중계 기록이 없습니다.</div>'}
 let playInn=null;
@@ -260,13 +264,13 @@ async function loadDetail(id){
   const token=++detailToken;
   const hasDetail=!!$('#selectedDetail').querySelector('.detailgrid');
   
-  try{let [relayRaw,g0,dm]=await Promise.all([api(`/schedule/games/${encodeURIComponent(id)}/relay`),api(`/schedule/games/${encodeURIComponent(id)}`),fetch('/api/daum?gameId='+encodeURIComponent(id),{cache:'no-store',signal:AbortSignal.timeout(2500)}).then(x=>x.ok?x.json():null).catch(()=>null)]);if(token!==detailToken||String(id)!==String(selectedId))return;let r=unwrapRelay(relayRaw),g=g0.game||g0.scheduleGame||g0,c=stateFromRelay(r),away=V(g,'awayTeamName')||'원정',home=V(g,'homeTeamName')||'홈',si=status(g),as=stat(g,r,'away'),hs=stat(g,r,'home'),ing=V(r,'inn','currentInning')??V(g,'currentInning'),half=String(V(c,'homeOrAway')??V(r,'homeOrAway')??''),inning=ing?(ing+'회'+(half==='0'?'초':half==='1'?'말':'')):'';let ab=V(r,'awayLineup','awayEntry')||{},hb=V(r,'homeLineup','homeEntry')||{},al=playerList(V(ab,'batter','batters','players')),hl=playerList(V(hb,'batter','batters','players')),ap=playerList(V(ab,'pitcher','pitchers','players')),hp=playerList(V(hb,'pitcher','pitchers','players')),aid=V(c,'batter','batterId','currentBatter'),pid=V(c,'pitcher','pitcherId','currentPitcher'),br0=latestBatterRecord(r),br=(br0&&String(pcode(br0)??aid)===String(aid))?br0:null,batter=Object.assign({},find(String(half)==='0'?al:hl,aid)||{},br||{}),pitch=Object.assign({},find(String(half)==='0'?hp:ap,pid)||{}),pls=[ap,hp];
+  try{let [relayRaw,g0,dm]=await Promise.all([api(`/schedule/games/${encodeURIComponent(id)}/relay`),api(`/schedule/games/${encodeURIComponent(id)}`),fetch('/api/daum?gameId='+encodeURIComponent(id),{cache:'no-store',signal:AbortSignal.timeout(2500)}).then(x=>x.ok?x.json():null).catch(()=>null)]);if(token!==detailToken||String(id)!==String(selectedId))return;let r=unwrapRelay(relayRaw),g=g0.game||g0.scheduleGame||g0,c=stateFromRelay(r),away=V(g,'awayTeamName')||'원정',home=V(g,'homeTeamName')||'홈',si=status(g),as=stat(g,r,'away'),hs=stat(g,r,'home'),ing=V(r,'inn','currentInning')??V(g,'currentInning'),half=String(V(c,'homeOrAway')??V(r,'homeOrAway')??''),inning=ing?fixInn(ing,half):'';let ab=V(r,'awayLineup','awayEntry')||{},hb=V(r,'homeLineup','homeEntry')||{},al=playerList(V(ab,'batter','batters','players')),hl=playerList(V(hb,'batter','batters','players')),ap=playerList(V(ab,'pitcher','pitchers','players')),hp=playerList(V(hb,'pitcher','pitchers','players')),aid=V(c,'batter','batterId','currentBatter'),pid=V(c,'pitcher','pitcherId','currentPitcher'),br0=latestBatterRecord(r),br=(br0&&String(pcode(br0)??aid)===String(aid))?br0:null,batter=Object.assign({},find(String(half)==='0'?al:hl,aid)||{},br||{}),pitch=Object.assign({},find(String(half)==='0'?hp:ap,pid)||{}),pls=[ap,hp];
 let c2=c;if(dm&&dm.G_ID&&dm.batterInfo&&dm.pitcherInfo){let D=dm,tb=D.tbSc==='T';half=tb?'0':'1';inning=D.innNo+'회'+(tb?'초':'말');ing=D.innNo;c=Object.assign({},c,{ball:D.ball,strike:D.strike,out:D.out,awayScore:D.away?.run,homeScore:D.home?.run,homeOrAway:half});c2=Object.assign({},c,{base1:D.b1,base2:D.b2,base3:D.b3});batter=Object.assign({},batter,{name:D.batterInfo.pNm});pitch=Object.assign({},pitch,{name:D.pitcherInfo.pNm,pitchCount:D.pitcherInfo.pitAllCn});}
-let pk=playInn,rP=r,cur=Number(ing)||1,rl=n=>api(`/schedule/games/${encodeURIComponent(id)}/relay?inning=${n}`);
+let pk=playInn,rP=r,cur=parseInt(ing)||1,rl=n=>api(`/schedule/games/${encodeURIComponent(id)}/relay?inning=${n}`);
 try{if(pk==='score'){let rs=await Promise.all(Array.from({length:cur},(_,i)=>rl(i+1).then(unwrapRelay).catch(()=>null)));rP={textRelays:rs.flatMap(x=>x?A(V(x,'textRelays','relays')):[])}}else if(pk!=null&&Number(pk)!==cur){rP=unwrapRelay(await rl(pk))}}catch(e){rP=r}
 if(token!==detailToken||String(id)!==String(selectedId))return;
-commitHTML($('#selectedDetail'),`<div class="detailgrid"><div class="left"><div class="card scorecard"><div class="scoretop"><span class="teamname">${badge(away,true)}${esc(away)}</span><span class="scorebig">${esc(V(c,'awayScore')??score(g,'away'))} : ${esc(V(c,'homeScore')??score(g,'home'))}</span><span class="teamname">${esc(home)}${badge(home,true)}</span><span class="statuspill">${esc(si[1])}</span><span class="inningpill">${esc(inning||'')}</span></div><div class="scoremeta">${esc(V(g,'gameDateTime','startTime','gameTime')||'')} · ${esc(V(g,'stadium','stadiumName')||'')} · 실시간 데이터 연결됨 <span class="source-note">데이터: 네이버 스포츠 / DOYUNGO 공식 기록 · 이미지: 네이버 스포츠 / 다음 스포츠 우선</span></div></div>
-${pitchView(r,c2,batter,pitch,pid,away,home,half,inning.replace(/[초말]$/,''),dm)}<div class="card panel"><div class="pt">이닝별 스코어</div><div class="pb">${inningTable(r,g)}</div></div>
+commitHTML($('#selectedDetail'),`<div class="detailgrid"><div class="left"><div class="card scorecard"><div class="scoretop"><span class="teamname">${badge(away,true)}${esc(away)}</span><span class="scorebig">${esc(V(c,'awayScore')??score(g,'away'))} : ${esc(V(c,'homeScore')??score(g,'home'))}</span><span class="teamname">${esc(home)}${badge(home,true)}</span><span class="statuspill s-${si[0]}">${esc(si[1])}</span>${si[0]==='pre'||!inning?'':`<span class="inningpill">${esc(inning)}</span>`}</div><div class="scoremeta">${esc(V(g,'gameDateTime','startTime','gameTime')||'')} · ${esc(V(g,'stadium','stadiumName')||'')} · 실시간 데이터 연결됨 <span class="source-note">데이터: 네이버 스포츠 / DOYUNGO 공식 기록 · 이미지: 네이버 스포츠 / 다음 스포츠 우선</span></div></div>
+${pitchView(r,c2,batter,pitch,pid,away,home,half,(si[0]==='pre'?'':inning),dm)}<div class="card panel"><div class="pt">이닝별 스코어</div><div class="pb">${inningTable(r,g)}</div></div>
 <div class="card panel"><div class="pt">현재 타석</div><div class="pb"><div class="twocol"><div class="playerbox"><b>타자</b><div class="playerrow" style="margin-top:6px">${playerPhoto(batter,true)}<div class="main">${esc(name(batter))}</div></div><div class="muted">오늘 ${esc(V(batter,'todayHra','todayAvg','avg','battingAverage')??'-')} · 시즌 ${esc(V(batter,'seasonHra','seasonAvg','avg','battingAverage')??'-')}</div></div><div class="pitchbox"><b>투수</b><div class="playerrow" style="margin-top:6px">${playerPhoto(pitch,true)}<div class="main">${esc(name(pitch))}</div></div><div class="muted">투구수 ${esc(V(pitch,'pitchCount','pitches','pitchingCount')??'-')} · ERA ${esc(V(pitch,'era','todayEra')??'-')}</div></div></div>${bases(c,al,hl,half)}</div></div>
 <div class="card panel"><div class="pt">라인업</div><div class="pb"><div class="lineups"><div class="lineupcol"><div class="lineuphead">${esc(away)}</div>${lineup(al)}</div><div class="lineupcol"><div class="lineuphead">${esc(home)}</div>${lineup(hl)}</div></div></div></div></div>
 <div class="right"><div class="card panel"><div class="pt">R / H / E / B</div><div class="pb"><div class="teamstat"><div class="teamstathead">${esc(away)}</div><div class="rheb">${['r','h','e','b'].map(k=>`<div class="rh"><b>${esc(as[k]??'-')}</b><span>${k.toUpperCase()}</span></div>`).join('')}</div></div><div class="teamstat"><div class="teamstathead">${esc(home)}</div><div class="rheb">${['r','h','e','b'].map(k=>`<div class="rh"><b>${esc(hs[k]??'-')}</b><span>${k.toUpperCase()}</span></div>`).join('')}</div></div></div></div>
@@ -469,7 +473,7 @@ sendDVMessage=async function(redo){const btn=document.querySelector('.ai-send'),
  busy=true;ctl=new AbortController();btn.textContent='■ 중지';btn.classList.add('stop');let acc='';
  try{window.ensureSeason&&window.ensureSeason().catch(()=>{});
   const r=await aiFetch({method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({stream:true,model:$('#aiModel')?.value||'openai/gpt-oss-20b',messages:[{role:'system',content:`당신은 D.V.입니다. 한국어로 정확하고 친절하게 답하세요. 마크다운(제목, 목록, 표, 코드블록)을 자유롭게 사용하고, 수식은 LaTeX($...$ 인라인, $$...$$ 블록)로 작성하세요. ${currentGameContext()}`},...history,{role:'user',content:q}]})});
-  if(!r.ok){let d={};try{d=await r.json()}catch{}throw Error(d.error||'AI 서버 오류 '+r.status)}
+  if(!r.ok){let d={};try{d=await r.json()}catch{}throw Error(r.status===401||/invalid api key/i.test(d.error||'')?'AI 키가 유효하지 않거나 폐기되었습니다. Groq에서 새 키를 발급해 Vercel 환경변수 GROQ_API_KEY에 넣고 다시 배포하세요.':(d.error||'AI 서버 오류 '+r.status))}
   const rd=r.body.getReader(),dec=new TextDecoder();
   for(;;){const {done,value}=await rd.read();if(done)break;acc+=dec.decode(value,{stream:true});el.innerHTML=md(acc);el.dataset.raw=acc;box.scrollTop=box.scrollHeight}
   if(!acc.trim()){el.innerHTML=md('응답이 비어 있습니다.');el.dataset.raw=''}else acts(el)
@@ -489,9 +493,10 @@ const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/aja
 </script>
 <script id="v25-js">
 /* /api/ai 가 있으면(Vercel) 서버 경유, 없으면(정적 호스팅 등) 브라우저에서 Groq 직접 호출 → 항상 같은 화면에서 답변 */
-const DV_KEY='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';
+const DV_KEY='';
 async function aiFetch(init){let r=null;try{r=await fetch('/api/ai',init)}catch(e){if(e.name==='AbortError')throw e}
  if(r&&r.status!==404&&r.status!==405)return r;
+ if(!DV_KEY)return new Response(JSON.stringify({error:'AI 서버(/api/ai)를 찾을 수 없습니다. api 폴더 배포와 GROQ_API_KEY 환경변수를 확인하세요.'}),{status:404});
  const b=JSON.parse(init.body);
  const up=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',signal:init.signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+DV_KEY},body:JSON.stringify({model:b.model,messages:b.messages.slice(-24),temperature:.4,max_tokens:2000,stream:true})});
  if(!up.ok){let d={};try{d=await up.json()}catch{}return new Response(JSON.stringify({error:d?.error?.message||'Groq 오류 '+up.status}),{status:up.status})}
@@ -504,14 +509,14 @@ async function aiFetch(init){let r=null;try{r=await fetch('/api/ai',init)}catch(
 const box=document.createElement('div');box.id='v28lineup';$('#selectedDetail').insertAdjacentElement('afterend',box);
 const nm=p=>p&&typeof p==='object'?V(p,'name','playerName','pName','pNm','playerNm'):null,ordOf=p=>V(p,'batOrder','order','seqno','battingOrder');
 function lineups(o,path,out){if(!o||typeof o!=='object')return;
- if(Array.isArray(o)){const ps=o.filter(x=>x&&typeof x==='object'&&nm(x)&&(ordOf(x)!=null||V(x,'positionName','posName','pos','position')));if(ps.length>=8&&/lineup|entry/i.test(path)&&/home|away/i.test(path)){out.push([path,ps]);return}o.forEach((x,i)=>lineups(x,path+'.'+i,out));return}
+ if(Array.isArray(o)){const ps=o.filter(x=>x&&typeof x==='object'&&nm(x)&&(ordOf(x)!=null||V(x,'positionName','posName','pos','position')));if(ps.length>=5&&/lineup|entry|batter/i.test(path)){out.push([path,ps]);return}o.forEach((x,i)=>lineups(x,path+'.'+i,out));return}
  Object.keys(o).forEach(k=>lineups(o[k],path+'.'+k,out))}
 function starters(o,path,out){if(!o||typeof o!=='object')return;
  if(/starter/i.test(path)&&/home|away/i.test(path)){const n=nm(o)||nm(V(o,'playerInfo','player'));if(n){out.push([path,n,V(o,'playerInfo','player')||o]);return}}
  Object.keys(o).forEach(k=>starters(o[k],path+'.'+k,out))}
 const side=p=>/away/i.test(p)?'away':/home/i.test(p)?'home':null;
 function parse(d){const L=[],S=[];lineups(d,'',L);starters(d,'',S);const r={away:null,home:null,sa:null,sh:null};
- L.forEach(([p,ps])=>{const s=side(p);if(s&&!r[s])r[s]=ps.slice().sort((a,b)=>(+ordOf(a)||99)-(+ordOf(b)||99))});
+ L.forEach(([p,ps],i)=>{const s=side(p)||(i===0?'away':'home');if(!r[s])r[s]=ps.slice().sort((a,b)=>(+ordOf(a)||99)-(+ordOf(b)||99))});
  S.forEach(([p,n,o])=>{const s=side(p);if(s==='away'&&!r.sa){r.sa=n;r.sao=o}if(s==='home'&&!r.sh){r.sh=n;r.sho=o}});return r}
 const pid=p=>Object.assign({},p,{pcode:pcode(p)||V(p,'pCode','playerNo','pno')}),col=(team,ps,sp,spo)=>`<div class="lineupcol"><div class="lineuphead">${esc(team)}</div>${sp?`<div class="player"><span>선발</span><div class="playerrow">${spo?playerPhoto(pid(spo)):''}<b>${esc(sp)}</b></div><small>투수</small></div>`:''}${(ps||[]).slice(0,10).map((p,i)=>`<div class="player"><span>${esc(ordOf(p)??i+1)}</span><div class="playerrow">${playerPhoto(pid(p))}<b>${esc(nm(p))}</b></div><small>${esc(V(p,'positionName','posName','pos','position')||'')}</small></div>`).join('')||'<div class="muted" style="padding:6px 0;font-size:12px">발표 전</div>'}</div>`;
 const done={},tried={};
@@ -520,9 +525,80 @@ function paint(id,d){const r=parse(d);if(!(r.away||r.home))return false;if(Strin
  const g=todayGames.find(x=>String(x.gameId)===String(id))||{},a=short(V(g,'awayTeamName')||'원정'),h=short(V(g,'homeTeamName')||'홈');
  box.innerHTML=`<div class="card panel" style="margin-top:12px"><div class="pt">라인업 <small class="muted">빠른 조회</small></div><div class="pb"><div class="lineups">${col(a,r.away,r.sa,r.sao)}${col(h,r.home,r.sh,r.sho)}</div></div></div>`;done[id]=1;return true}
 function fast(id){if(done[id]||Date.now()-(tried[id]||0)<15000)return;tried[id]=Date.now();
- api(`/schedule/games/${encodeURIComponent(id)}/preview`).then(d=>paint(id,d)||Promise.reject()).catch(()=>api(`/schedule/games/${encodeURIComponent(id)}/relay`).then(d=>paint(id,d)).catch(()=>{}))}
+ api(`/schedule/games/${encodeURIComponent(id)}/preview`).then(d=>paint(id,d)||Promise.reject()).catch(()=>api(`/schedule/games/${encodeURIComponent(id)}/relay`).then(d=>paint(id,d)||Promise.reject()).catch(()=>{if(!done[id]&&String(id)===String(selectedId)&&!$('#selectedDetail .player'))box.innerHTML='<div class="card panel" style="margin-top:12px"><div class="pt">라인업</div><div class="pb muted">아직 라인업 정보를 받지 못했어요. 발표되면 자동으로 표시됩니다.</div></div>'}))}
 const _l=loadDetail;loadDetail=async function(id){fast(id);await _l(id);if($('#selectedDetail .player'))box.innerHTML='';else if(String(id)!==String(selectedId))box.innerHTML=''};
 fast(selectedId);
 })();
 </script>
+<style id="v36-css">
+@keyframes v36f{0%{transform:scale(1.35);text-shadow:0 0 22px #ffd84a}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+.v36flash{display:inline-block;animation:v36f 1.1s cubic-bezier(.2,.8,.2,1)}
+#v36stamp{font-size:11px;color:#7a8ba1;margin-left:auto}#v36ref{padding:6px 10px!important;font-size:12px}
+</style>
+<script id="v36-js">
+(()=>{
+const det=$('#selectedDetail');let lk='',last='';
+new MutationObserver(()=>{const s=det.querySelector('.scorebig');if(!s)return;const v=s.textContent.replace(/\s/g,''),k=String(selectedId);
+ if(k!==lk){lk=k;last=v;return}
+ if(last&&v!==last&&/\d/.test(v)){s.classList.remove('v36flash');void s.offsetWidth;s.classList.add('v36flash');try{if(JSON.parse(localStorage.getItem('kbo_bell'))&&navigator.vibrate)navigator.vibrate(60)}catch(e){}}
+ last=v}).observe(det,{childList:true,subtree:true,characterData:true});
+const bar=document.querySelector('.v20bar');let at=0;
+if(bar){bar.insertAdjacentHTML('beforeend','<button id="v36ref" class="glass-btn">↻ 새로고침</button><span id="v36stamp"></span>');
+ $('#v36ref').onclick=()=>{loadDate(selectedDate)};
+ setInterval(()=>{const e=$('#v36stamp');if(!e||!at)return;const s=Math.round((Date.now()-at)/1000);e.textContent=s<5?'방금 갱신':s<60?s+'초 전 갱신':Math.floor(s/60)+'분 전 갱신'},1000)}
+const _fs=fetchSchedule;fetchSchedule=async function(a,b){const r=await _fs(a,b);if(a===b)at=Date.now();return r};
+})();
+</script>
+<style id="v37-ui">
+:root{--ink:#0f1b2d;--sub:#64778f;--line:rgba(15,27,45,.08);--glass:rgba(255,255,255,.78);--acc:#0a84ff;--acc2:#5e5ce6;--r:22px;--sh:0 1px 2px rgba(15,27,45,.04),0 10px 30px -12px rgba(15,27,45,.18)}
+html{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;-webkit-font-smoothing:antialiased}
+body{font-family:inherit;color:var(--ink);background:radial-gradient(900px 500px at 8% -8%,#d9e8ff 0,transparent 60%),radial-gradient(800px 460px at 100% 0,#ecdcff 0,transparent 55%),linear-gradient(#f4f7fc,#eaf0f8) fixed}
+button,select,input,textarea{font-family:inherit}
+.top{background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);border-bottom:1px solid var(--line);box-shadow:none}
+.top .mark{background:linear-gradient(135deg,#17213d,#3b5b92);color:#fff;border-radius:14px;box-shadow:0 8px 18px -8px #17213d}
+.top .logo{font-weight:900;letter-spacing:-.02em;background:linear-gradient(90deg,#0f1b2d,#3b5b92);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tagline{color:var(--sub);font-weight:600}
+.nav{background:rgba(15,27,45,.06);border-radius:999px;padding:4px;gap:2px;border:0;box-shadow:none}
+.nav button{border-radius:999px;font-weight:800;color:var(--sub);background:transparent;border:0;transition:.25s}
+.nav button.on{background:#fff;color:var(--ink);box-shadow:0 4px 14px -4px rgba(15,27,45,.25)}
+.card{border:1px solid rgba(255,255,255,.7);border-radius:var(--r);background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--sh)}
+.pt{font-weight:900;letter-spacing:-.01em;border-bottom:1px solid var(--line);position:relative;padding-left:26px}
+.pt:before{content:"";position:absolute;left:14px;top:50%;width:4px;height:15px;margin-top:-7px;border-radius:4px;background:linear-gradient(var(--acc),var(--acc2))}
+.glass-btn{border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.85);box-shadow:0 2px 8px -3px rgba(15,27,45,.15);font-weight:800;transition:.2s}
+.glass-btn:active{transform:scale(.96)}
+.gamecard{border-radius:20px;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
+.gamecard:hover{transform:translateY(-2px);box-shadow:0 16px 34px -14px rgba(15,27,45,.3)}
+.gamecard.sel,.gamecard.on,.gamecard.selected{outline:2.5px solid var(--acc);outline-offset:-2.5px}
+.gscore{font-variant-numeric:tabular-nums;font-weight:900}
+.main-head{padding:2px 4px 8px;border:0;background:none}.main-head b{font-weight:900;letter-spacing:-.02em}
+#selectedDetail .scorecard{border-radius:26px;padding:22px 22px 16px;box-shadow:0 24px 50px -22px color-mix(in srgb,var(--gb,#c30452) 70%,#000)!important}
+.scorebig{font-size:46px!important;font-weight:950;letter-spacing:.04em;font-variant-numeric:tabular-nums;line-height:1}
+.scoretop .teamname{font-weight:900;letter-spacing:-.02em}
+.statuspill,.inningpill{border-radius:999px;padding:5px 12px;font-weight:900;font-size:12px;letter-spacing:.01em;border:0}
+.statuspill{background:rgba(255,255,255,.2)!important;color:#fff!important;border:1px solid rgba(255,255,255,.38)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.statuspill.s-live{background:#ff3b30!important;border-color:#ff3b30!important;animation:v37p 1.6s infinite}
+.statuspill.s-end{background:rgba(15,27,45,.45)!important}
+.inningpill{background:#fff!important;color:#17213d!important}
+@keyframes v37p{0%{box-shadow:0 0 0 0 rgba(255,59,48,.55)}70%{box-shadow:0 0 0 10px rgba(255,59,48,0)}100%{box-shadow:0 0 0 0 rgba(255,59,48,0)}}
+.scoremeta{opacity:.9;font-weight:600}
+.pv-in b{font-weight:900;letter-spacing:-.01em}
+.livefield{border-radius:24px}
+.player,.play{border-radius:12px;transition:background .2s}.player:hover,.play:hover{background:rgba(10,132,255,.06)}
+.playerphoto{border-radius:50%;box-shadow:0 0 0 2px #fff,0 4px 10px -4px rgba(15,27,45,.35)}
+table.standings th{font-weight:800;color:var(--sub)}table.standings tr.my td{background:rgba(10,132,255,.08)}
+.ai-msg.user{background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:20px 20px 6px 20px;box-shadow:0 8px 20px -10px var(--acc2)}
+.ai-send{background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:999px}
+.v20chip{border-radius:999px;font-weight:800}.v20chip.on{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(15,27,45,.18);border-radius:8px}
+@media(max-width:760px){
+ .navwrap{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:60;padding:0}
+ .navwrap .nav{display:flex;width:100%;background:rgba(255,255,255,.82);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);box-shadow:0 18px 40px -12px rgba(15,27,45,.35);border:1px solid rgba(255,255,255,.8);padding:6px}
+ .navwrap .nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 2px;font-size:11px;min-width:0}
+ .navwrap .nav button:before{font-size:18px;line-height:1.1}
+ #gamesTab:before{content:"⚾"}#allTab:before{content:"📅"}#rankTab:before{content:"🏆"}#myTab:before{content:"⭐"}#aiTab:before{content:"✦"}
+ .page{padding-bottom:104px}
+ .scorebig{font-size:32px!important}
+ #selectedDetail .scorecard{padding:16px 12px 12px;border-radius:22px}
+}
+</style>
 </body></html>
