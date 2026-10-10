@@ -47,3 +47,4 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v41: 순위·인사이트에서 시범경기/포스트시즌 제외(3/28~10/13), KBO 승률(승/(승+패)) 적용, 경기 인사이트 재작성(최근10·연속·홈/원정·득실·맞대결 득점)
 - v42: 헤더 로고 자동 전환 — logo-live.(png|webp|svg|jpg) / logo-idle.(png|webp|svg|jpg) 를 index.html 과 같은 폴더에 올리면 경기 진행 여부에 따라 표시
 - v43: 라인업 패널 중복 제거 — 빠른 조회가 표시되면 데이터 없는 기존 패널 숨김
+- v44: 모바일 하단 탭바가 헤더 안에 갇히던 문제 수정(backdrop-filter 분리)

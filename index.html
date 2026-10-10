@@ -650,4 +650,12 @@ html[data-fastlineup="1"] #selectedDetail .card.panel:has(.lineups .empty){displ
 const f=()=>{document.documentElement.dataset.fastlineup=b.querySelector('.lineups')?'1':'0'};
 new MutationObserver(f).observe(b,{childList:true,subtree:true});f()})();
 </script>
+<style id="v44-mobile">
+@media(max-width:760px){
+ /* 헤더의 backdrop-filter 가 position:fixed 자식(하단 탭바)의 기준을 헤더로 바꾸던 문제 → 블러를 가상요소로 분리 */
+ .top{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:transparent!important;isolation:isolate}
+ .top:before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(255,255,255,.82);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);border-bottom:1px solid rgba(15,27,45,.08)}
+ .navwrap{position:fixed!important;left:12px!important;right:12px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;top:auto!important;z-index:70}
+}
+</style>
 </body></html>
