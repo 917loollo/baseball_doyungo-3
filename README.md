@@ -50,3 +50,4 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v44: 모바일 하단 탭바가 헤더 안에 갇히던 문제 수정(backdrop-filter 분리)
 - v45: 모바일 하단 탭바를 리퀴드 글래스 캡슐로 교체(잘림/뒤 배경 제거, SVG 아이콘, 슬라이딩 선택 표시)
 - v46: 모바일 헤더가 상태바 뒤로 들어가 번져 보이던 문제 수정(safe-area 적용)
+- v47: 모바일 헤더 블러 레이어 제거(로고가 흐리게 보이던 문제)

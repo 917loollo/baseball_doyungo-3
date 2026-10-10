@@ -693,4 +693,12 @@ new MutationObserver(mv).observe(nav,{attributes:true,subtree:true,attributeFilt
   background:linear-gradient(rgba(244,247,252,.94),rgba(244,247,252,.72));-webkit-backdrop-filter:blur(18px) saturate(180%);backdrop-filter:blur(18px) saturate(180%)}
 }
 </style>
+<style id="v47-header">
+@media(max-width:760px){
+ /* 모바일 헤더는 더 이상 고정(sticky)이 아니라 뒤로 지나가는 내용이 없으므로 블러 레이어 자체를 제거 → 로고 위에 흐린 막이 덮이지 않음 */
+ .top:before{display:none!important}
+ .top{isolation:auto!important;background:transparent!important;border-bottom:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+ .brandleft .mark.v42 img{image-rendering:auto;-webkit-transform:translateZ(0);animation:none}
+}
+</style>
 </body></html>
