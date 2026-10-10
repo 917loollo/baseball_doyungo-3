@@ -43,3 +43,6 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v37: UI 전면 개편(유리 질감·모바일 하단 탭바·새 타이포), 이닝 표기 1회초 수정, 경기 전에는 "경기 예정"만 표시
 - v38: 코드에 넣어 둔 AI 키 제거(키는 Vercel 환경변수 GROQ_API_KEY 로만), Invalid API Key 안내 문구
 - v39: 라인업 필드 대소문자 무시·별칭 확대, 빠른 라인업 파서 완화·안내 문구, diag 라인업 구조 점검
+- v40: 빠른 라인업이 투수 명단을 타자로 보여주던 문제 수정(타순 1~9 배열만 사용), 포지션 한글 표시
+- v41: 순위·인사이트에서 시범경기/포스트시즌 제외(3/28~10/13), KBO 승률(승/(승+패)) 적용, 경기 인사이트 재작성(최근10·연속·홈/원정·득실·맞대결 득점)
+- v42: 헤더 로고 자동 전환 — logo-live.(png|webp|svg|jpg) / logo-idle.(png|webp|svg|jpg) 를 index.html 과 같은 폴더에 올리면 경기 진행 여부에 따라 표시

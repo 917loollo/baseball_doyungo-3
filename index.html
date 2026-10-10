@@ -285,7 +285,8 @@ function selectMonth(m){allMonth=m;renderAll()}
 const teamNames=['LG','두산','삼성','SSG','KT','한화','롯데','KIA','NC','키움'];
 function saveMyTeam(t){myTeam=t;localStorage.setItem('kbo_my_team',t);renderMyTeam();if(todayGames.length)patchGameCards(todayGames)}
 function toggleFavorite(id){id=String(id);favoriteGames=favoriteGames.includes(id)?favoriteGames.filter(x=>x!==id):[...favoriteGames,id];localStorage.setItem('kbo_favorite_games',JSON.stringify(favoriteGames));patchGameCards(todayGames)}
-function teamStandings(games){let m={};teamNames.forEach(t=>m[t]={team:t,gp:0,w:0,l:0,t:0,rs:0,ra:0});games.forEach(g=>{let [st]=status(g);if(st!=='end')return;let a=short(V(g,'awayTeamName')),h=short(V(g,'homeTeamName'));let as=Number(score(g,'away')),hs=Number(score(g,'home'));if(!m[a]||!m[h]||!Number.isFinite(as)||!Number.isFinite(hs))return;m[a].gp++;m[h].gp++;m[a].rs+=as;m[a].ra+=hs;m[h].rs+=hs;m[h].ra+=as;if(as>hs){m[a].w++;m[h].l++}else if(as<hs){m[h].w++;m[a].l++}else{m[a].t++;m[h].t++}});let rows=Object.values(m).map(x=>({...x,pct:(x.w+x.l+x.t)?(x.w+x.t*.5)/(x.w+x.l+x.t):0}));rows.sort((a,b)=>b.pct-a.pct||b.w-a.w||a.l-b.l);let leader=rows[0];rows.forEach((x,i)=>x.rank=i+1);rows.forEach(x=>x.gb=((leader.w-x.w)+(x.l-leader.l))/2);return rows}
+function isReg(g){const d=dateOf(g);return d>='2026-03-28'&&d<'2026-10-14'}
+function teamStandings(games){let m={};teamNames.forEach(t=>m[t]={team:t,gp:0,w:0,l:0,t:0,rs:0,ra:0});games.forEach(g=>{let [st]=status(g);if(st!=='end'||!isReg(g))return;let a=short(V(g,'awayTeamName')),h=short(V(g,'homeTeamName'));let as=Number(score(g,'away')),hs=Number(score(g,'home'));if(!m[a]||!m[h]||!Number.isFinite(as)||!Number.isFinite(hs))return;m[a].gp++;m[h].gp++;m[a].rs+=as;m[a].ra+=hs;m[h].rs+=hs;m[h].ra+=as;if(as>hs){m[a].w++;m[h].l++}else if(as<hs){m[h].w++;m[a].l++}else{m[a].t++;m[h].t++}});let rows=Object.values(m).map(x=>({...x,pct:(x.w+x.l)?x.w/(x.w+x.l):0}));rows.sort((a,b)=>b.pct-a.pct||b.w-a.w||a.l-b.l);let leader=rows[0];rows.forEach((x,i)=>x.rank=i+1);rows.forEach(x=>x.gb=((leader.w-x.w)+(x.l-leader.l))/2);return rows}
 async function loadRank(){currentView='rank';localStorage.setItem('kbo_view','rank');$('#ranking').classList.remove('hidden');$('#teamRankBody').innerHTML='<div class="card empty">팀 순위를 계산하는 중…</div>';try{if(!allCache.length){let ms=['03','04','05','06','07','08','09','10'];let r=await Promise.all(ms.map(m=>fetchSchedule(`2026-${m}-01`,`2026-${m}-${['04','06','09'].includes(m)?30:31}`)));allCache=unique(r.flat())}let rows=teamStandings(allCache);$('#teamRankBody').innerHTML=`<div class="card"><div class="pb scroll"><table class="standings"><thead><tr><th>순위</th><th>팀</th><th>경기</th><th>승</th><th>패</th><th>무</th><th>승률</th><th>게임차</th></tr></thead><tbody>${rows.map(x=>`<tr class="${myTeam===x.team?'myteam':''}"><td class="rankno">${x.rank}</td><td>${badge(x.team,true)}${esc(x.team)}${myTeam===x.team?'<span class="my-pill">MY</span>':''}</td><td>${x.gp}</td><td>${x.w}</td><td>${x.l}</td><td>${x.t}</td><td>${x.pct.toFixed(3)}</td><td>${x.rank===1?'-':x.gb.toFixed(1)}</td></tr>`).join('')}</tbody></table></div></div><div class="my-actions"><button class="glass-btn" onclick="show('my')">★ MY 팀 설정</button><button class="glass-btn" onclick="loadRank()">↻ 순위 새로고침</button></div>`}catch(e){$('#teamRankBody').innerHTML=`<div class="card err">팀 순위를 불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`}}
 function renderMyTeam(){let body=$('#myTeamBody');if(!body)return;let chosen=myTeam||'';body.innerHTML=`<div class="card panel"><div class="pt">응원 팀 선택</div><div class="pb"><div class="myteam-grid">${teamNames.map(t=>`<button class="team-choice ${chosen===t?'selected':''}" onclick="saveMyTeam('${t}')">${badge(t,true)}<span>${t}${chosen===t?'<span class="my-pill">선택됨</span>':''}</span></button>`).join('')}</div></div></div><div class="card panel"><div class="pt">MY 팀 기능</div><div class="pb"><div class="muted">선택한 팀은 경기 카드와 팀 순위에서 강조되고, 새로고침 후에도 유지됩니다.</div><div class="my-actions"><button class="glass-btn" onclick="loadDate(selectedDate)">MY 팀 경기 보기</button><button class="glass-btn" onclick="saveMyTeam('');renderMyTeam()">설정 초기화</button></div></div></div>`}
 function openAI(){const i=$('#aiInput');if(i){i.focus();i.scrollIntoView({behavior:'smooth',block:'center'})}}
@@ -359,7 +360,7 @@ const toast=m=>{const t=$('#v20toast');t.textContent=m;t.classList.add('show');c
 /* ---------- 데이터 헬퍼 ---------- */
 const tn=g=>[short(V(g,'awayTeamName')),short(V(g,'homeTeamName'))],fin=g=>status(g)[0]==='end',sc=(g,s)=>Number(score(g,s));
 const res=(g,t)=>{const [a]=tn(g),x=sc(g,'away'),y=sc(g,'home');if(!isFinite(x)||!isFinite(y))return null;const m=a===t?x:y,o=a===t?y:x;return m>o?'W':m<o?'L':'D'};
-const recent=(t,n)=>allCache.filter(g=>fin(g)&&tn(g).includes(t)).slice(-n);
+const recent=(t,n)=>allCache.filter(g=>fin(g)&&isReg(g)&&tn(g).includes(t)).slice(-n);
 const chips=(t,n)=>recent(t,n).map(g=>`<span class="v20r ${res(g,t)}">${{W:'승',L:'패',D:'무'}[res(g,t)]}</span>`).join('')||'-';
 const streak=t=>{const r=recent(t,40).map(g=>res(g,t)).filter(Boolean);if(!r.length)return'-';const l=r.at(-1);let c=0;for(let i=r.length-1;i>=0&&r[i]===l;i--)c++;return c+({W:'연승',L:'연패',D:'무'}[l])};
 const pyth=(rs,ra)=>rs+ra?Math.pow(rs,1.83)/(Math.pow(rs,1.83)+Math.pow(ra,1.83)):.5;
@@ -391,22 +392,33 @@ $('#selectedDetail').insertAdjacentHTML('afterend','<div id="v20insight"></div>'
 const log5=(a,b)=>{const d=a+b-2*a*b;return d?(a-a*b)/d:.5};
 function strength(t){const r=row(t);if(!r||!r.gp)return .5;return .6*r.pct+.4*pyth(r.rs,r.ra)}
 async function insight(){const box=$('#v20insight'),g=todayGames.find(x=>String(x.gameId)===String(selectedId));if(!g){box.innerHTML='';return}
-  if(!allCache.length)box.innerHTML='<div class="card panel"><div class="pt">경기 인사이트</div><div class="pb muted">시즌 데이터를 불러오는 중…</div></div>';
-  try{await new Promise(r=>setTimeout(r,seasonAt||allCache.length?0:2500));await ensureSeason()}catch{return}
-  const [a,h]=tn(g),pa=strength(a),ph=strength(h),H=Math.min(.9,Math.max(.1,log5(ph,pa)+.035)),hp=Math.round(H*100);
-  const h2h=allCache.filter(x=>fin(x)&&tn(x).includes(a)&&tn(x).includes(h)),w=t=>h2h.filter(x=>res(x,t)==='W').length,d=h2h.filter(x=>res(x,a)==='D').length;
-  const ra=row(a),rh=row(h),rec=r=>r?`${r.w}승 ${r.l}패${r.t?` ${r.t}무`:''} · ${r.rank}위`:'-';
-  $('#v20insight').innerHTML=`<div class="card panel"><div class="pt">경기 인사이트 <small class="muted">참고용 통계</small></div><div class="pb">
-  <div class="v20row"><b>${esc(a)}</b><span>승리 확률</span><b>${esc(h)}</b></div><div class="v20bar2"><i style="width:${100-hp}%"></i><i style="width:${hp}%"></i></div><div class="v20row"><b>${100-hp}%</b><span class="muted">승률·득실 기반 + 홈 어드밴티지</span><b>${hp}%</b></div>
-  <div class="v20row"><span>시즌 맞대결</span><b>${esc(a)} ${w(a)}승 ${d?d+'무 ':''}${w(h)}패 ${esc(h)}</b></div>
-  <div class="v20row"><span>${esc(a)} 성적</span><b>${rec(ra)}</b></div><div class="v20row"><span>최근 5경기</span><span>${chips(a,5)} <small class="muted">${streak(a)}</small></span></div>
-  <div class="v20row"><span>${esc(h)} 성적</span><b>${rec(rh)}</b></div><div class="v20row"><span>최근 5경기</span><span>${chips(h,5)} <small class="muted">${streak(h)}</small></span></div>
+  const card=m=>`<div class="card panel"><div class="pt">경기 인사이트</div><div class="pb muted">${m}</div></div>`;
+  if(!allCache.length)box.innerHTML=card('시즌 데이터를 불러오는 중…');
+  try{await new Promise(r=>setTimeout(r,seasonAt||allCache.length?0:2500));await ensureSeason()}catch(e){box.innerHTML=card('시즌 데이터를 불러오지 못했어요. 잠시 후 다시 시도합니다.');return}
+  if(String(g.gameId)!==String(selectedId))return;
+  const [a,h]=tn(g),RW=rows(),rw=t=>RW.find(x=>x.team===t),ra=rw(a),rh=rw(h);
+  if(!ra||!rh){box.innerHTML=card('팀 기록을 계산하지 못했어요.');return}
+  const pa=strength(a),ph=strength(h),H=Math.min(.9,Math.max(.1,log5(ph,pa)+.035)),hp=Math.round(H*100);
+  const h2h=allCache.filter(x=>fin(x)&&isReg(x)&&tn(x).includes(a)&&tn(x).includes(h)),W=t=>h2h.filter(x=>res(x,t)==='W').length,D=h2h.filter(x=>res(x,a)==='D').length;
+  const pts=t=>h2h.reduce((s,x)=>s+(tn(x)[0]===t?sc(x,'away'):sc(x,'home')),0);
+  const rec=r=>`${r.w}승 ${r.l}패${r.t?` ${r.t}무`:''} · ${r.rank}위`;
+  const l10=t=>{const r=recent(t,10).map(x=>res(x,t)),c=k=>r.filter(x=>x===k).length;return `${c('W')}승 ${c('L')}패${c('D')?` ${c('D')}무`:''}`};
+  const ven=(t,home)=>{let w=0,l=0;allCache.forEach(x=>{if(!fin(x)||!isReg(x))return;const [aa,hh]=tn(x);if((home?hh:aa)!==t)return;const r=res(x,t);if(r==='W')w++;else if(r==='L')l++});return `${w}승 ${l}패`};
+  const pg=(r,k)=>r.gp?(r[k]/r.gp).toFixed(2):'-';
+  const blk=(t,r,home)=>`<div class="v20row" style="margin-top:6px"><b style="font-size:14px">${esc(t)} <small class="muted">${home?'홈':'원정'}</small></b><b>${rec(r)} · ${r.pct.toFixed(3)}</b></div>
+   <div class="v20row"><span>최근 10경기</span><span><b>${l10(t)}</b> ${chips(t,5)}</span></div>
+   <div class="v20row"><span>연속 기록 · ${home?'홈':'원정'} 성적</span><b>${streak(t)} · ${ven(t,home)}</b></div>
+   <div class="v20row"><span>경기당 득점 / 실점</span><b>${pg(r,'rs')} / ${pg(r,'ra')}</b></div>`;
+  box.innerHTML=`<div class="card panel"><div class="pt">경기 인사이트 <small class="muted">정규시즌 ${ra.gp+rh.gp?Math.round(allCache.filter(x=>fin(x)&&isReg(x)).length):0}경기 기준</small></div><div class="pb">
+  <div class="v20row"><b>${esc(a)}</b><span>승리 확률</span><b>${esc(h)}</b></div><div class="v20bar2"><i style="width:${100-hp}%"></i><i style="width:${hp}%"></i></div><div class="v20row"><b>${100-hp}%</b><span class="muted">승률·득실 마진 + 홈 어드밴티지 (참고용)</span><b>${hp}%</b></div>
+  <div class="v20row"><span>올 시즌 맞대결</span><b>${h2h.length?`${esc(a)} ${W(a)}승 ${D?D+'무 ':''}${W(h)}패 ${esc(h)} · 득점 ${pts(a)}:${pts(h)}`:'아직 맞대결 기록 없음'}</b></div>
+  ${blk(a,ra,false)}${blk(h,rh,true)}
   <div style="display:flex;gap:7px;margin-top:10px"><button class="glass-btn" id="v20share">📤 경기 공유</button><button class="glass-btn" id="v20ask">✦ AI에게 물어보기</button></div></div></div>`;
-  $('#v20share').onclick=async()=>{const t=`${a} ${score(g,'away')} : ${score(g,'home')} ${h} (${status(g)[1]}) - DOYUNGO LIVE`;try{if(navigator.share)await navigator.share({title:'DOYUNGO LIVE',text:t,url:location.href});else{await navigator.clipboard.writeText(t+' '+location.href);toast('복사했어요')}}catch{}};
+  $('#v20share').onclick=async()=>{const t=`${a} ${score(g,'away')} : ${score(g,'home')} ${h} (${status(g)[1]}) - DOYUNGO LIVE`;try{if(navigator.share)await navigator.share({title:'DOYUNGO LIVE',text:t,url:location.href});else{await navigator.clipboard.writeText(t+' '+location.href);toast('복사했어요')}}catch(e){}};
   $('#v20ask').onclick=()=>{show('ai');useAIQuick('현재 선택한 경기의 승부처와 주목할 선수를 분석해줘.')}}
 const _ld=loadDetail;loadDetail=async function(id){await _ld(id);insight()};
 /* ---------- 팀 순위 상세 기록 ---------- */
-const _lr=loadRank;loadRank=async function(){await _lr();try{await ensureSeason();const rs=rows(),ha={};teamNames.forEach(t=>ha[t]={hw:0,hl:0,aw:0,al:0});allCache.filter(fin).forEach(g=>{const [a,h]=tn(g);if(!ha[a]||!ha[h])return;const x=sc(g,'away'),y=sc(g,'home');if(x>y){ha[a].aw++;ha[h].hl++}else if(y>x){ha[h].hw++;ha[a].al++}});
+const _lr=loadRank;loadRank=async function(){await _lr();try{await ensureSeason();const rs=rows(),ha={};teamNames.forEach(t=>ha[t]={hw:0,hl:0,aw:0,al:0});allCache.filter(g=>fin(g)&&isReg(g)).forEach(g=>{const [a,h]=tn(g);if(!ha[a]||!ha[h])return;const x=sc(g,'away'),y=sc(g,'home');if(x>y){ha[a].aw++;ha[h].hl++}else if(y>x){ha[h].hw++;ha[a].al++}});
  $('#teamRankBody').insertAdjacentHTML('beforeend',`<div class="card" style="margin-top:12px"><div class="pt">상세 기록</div><div class="pb scroll"><table class="standings"><thead><tr><th>순위</th><th>팀</th><th>승차</th><th>최근 5</th><th>연속</th><th>득실</th><th>피타고리안</th><th>홈</th><th>원정</th></tr></thead><tbody>${rs.map(r=>`<tr class="${r.team===myTeam?'my':''}"><td>${r.rank}</td><td>${esc(r.team)}</td><td>${r.gb?r.gb.toFixed(1):'-'}</td><td>${chips(r.team,5)}</td><td>${streak(r.team)}</td><td>${r.rs-r.ra>0?'+':''}${r.rs-r.ra}</td><td>${pyth(r.rs,r.ra).toFixed(3)}</td><td>${ha[r.team].hw}-${ha[r.team].hl}</td><td>${ha[r.team].aw}-${ha[r.team].al}</td></tr>`).join('')}</tbody></table></div></div>`)}catch{}};
 /* ---------- MY 팀 대시보드 ---------- */
 const _rm=renderMyTeam;renderMyTeam=function(){_rm();drawBar();const b=$('#myTeamBody');if(!b||!myTeam)return;b.insertAdjacentHTML('beforeend','<div class="card panel" id="v20my"><div class="pt">내 팀 대시보드</div><div class="pb muted">불러오는 중…</div></div>');
@@ -516,11 +528,13 @@ function starters(o,path,out){if(!o||typeof o!=='object')return;
  Object.keys(o).forEach(k=>starters(o[k],path+'.'+k,out))}
 const side=p=>/away/i.test(p)?'away':/home/i.test(p)?'home':null;
 function parse(d){const L=[],S=[];lineups(d,'',L);starters(d,'',S);const r={away:null,home:null,sa:null,sh:null};
- L.forEach(([p,ps],i)=>{const s=side(p)||(i===0?'away':'home');if(!r[s])r[s]=ps.slice().sort((a,b)=>(+ordOf(a)||99)-(+ordOf(b)||99))});
+ const sc=([p,ps])=>{const o=new Set(ps.map(x=>+ordOf(x)).filter(n=>n>=1&&n<=9));let s=o.size>=8?10:o.size>=5?5:0;if(/batter|lineup/i.test(p))s+=2;if(/pitcher/i.test(p))s-=10;if(/bench|reserve|candidate|bullpen|sub/i.test(p))s-=5;return s},best={};
+ L.forEach((c,i)=>{const s=side(c[0])||(i===0?'away':'home'),v=sc(c);if(v>0&&(!best[s]||v>best[s].v))best[s]={v,ps:c[1]}});
+ ['away','home'].forEach(s=>{if(best[s])r[s]=best[s].ps.filter(x=>{const n=+ordOf(x);return n>=1&&n<=9}).sort((a,b)=>+ordOf(a)-+ordOf(b)).filter((x,i,a)=>a.findIndex(y=>+ordOf(y)===+ordOf(x))===i)});
  S.forEach(([p,n,o])=>{const s=side(p);if(s==='away'&&!r.sa){r.sa=n;r.sao=o}if(s==='home'&&!r.sh){r.sh=n;r.sho=o}});return r}
-const pid=p=>Object.assign({},p,{pcode:pcode(p)||V(p,'pCode','playerNo','pno')}),col=(team,ps,sp,spo)=>`<div class="lineupcol"><div class="lineuphead">${esc(team)}</div>${sp?`<div class="player"><span>선발</span><div class="playerrow">${spo?playerPhoto(pid(spo)):''}<b>${esc(sp)}</b></div><small>투수</small></div>`:''}${(ps||[]).slice(0,10).map((p,i)=>`<div class="player"><span>${esc(ordOf(p)??i+1)}</span><div class="playerrow">${playerPhoto(pid(p))}<b>${esc(nm(p))}</b></div><small>${esc(V(p,'positionName','posName','pos','position')||'')}</small></div>`).join('')||'<div class="muted" style="padding:6px 0;font-size:12px">발표 전</div>'}</div>`;
+const POS={1:'투수',2:'포수',3:'1루수',4:'2루수',5:'3루수',6:'유격수',7:'좌익수',8:'중견수',9:'우익수',10:'지명타자'},posOf=p=>{let v=V(p,'positionName','posName','posNm','positionNm','posKorName');if(v)return v;v=V(p,'pos','position','posCode');return POS[v]||(isNaN(v)?v:'')||''},pid=p=>Object.assign({},p,{pcode:pcode(p)||V(p,'pCode','playerNo','pno')}),col=(team,ps,sp,spo)=>`<div class="lineupcol"><div class="lineuphead">${esc(team)}</div>${sp?`<div class="player"><span>선발</span><div class="playerrow">${spo?playerPhoto(pid(spo)):''}<b>${esc(sp)}</b></div><small>투수</small></div>`:''}${(ps||[]).slice(0,9).map((p,i)=>`<div class="player"><span>${esc(ordOf(p)??i+1)}</span><div class="playerrow">${playerPhoto(pid(p))}<b>${esc(nm(p))}</b></div><small>${esc(posOf(p))}</small></div>`).join('')||'<div class="muted" style="padding:6px 0;font-size:12px">발표 전</div>'}</div>`;
 const done={},tried={};
-function paint(id,d){const r=parse(d);if(!(r.away||r.home))return false;if(String(id)!==String(selectedId))return true;
+function paint(id,d){const r=parse(d);if(!(r.away||r.home||r.sa||r.sh))return false;if(String(id)!==String(selectedId))return true;
  if($('#selectedDetail .player'))return true;
  const g=todayGames.find(x=>String(x.gameId)===String(id))||{},a=short(V(g,'awayTeamName')||'원정'),h=short(V(g,'homeTeamName')||'홈');
  box.innerHTML=`<div class="card panel" style="margin-top:12px"><div class="pt">라인업 <small class="muted">빠른 조회</small></div><div class="pb"><div class="lineups">${col(a,r.away,r.sa,r.sao)}${col(h,r.home,r.sh,r.sho)}</div></div></div>`;done[id]=1;return true}
@@ -601,4 +615,30 @@ table.standings th{font-weight:800;color:var(--sub)}table.standings tr.my td{bac
  #selectedDetail .scorecard{padding:16px 12px 12px;border-radius:22px}
 }
 </style>
+<style id="v42-css">
+.brandleft .mark.v42{background:none!important;box-shadow:none!important;border-radius:0;width:auto;min-width:44px;height:46px;padding:0;display:flex;align-items:center}
+.brandleft .mark.v42 img{height:46px;width:auto;max-width:200px;display:block;animation:v42in .5s ease}
+@keyframes v42in{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+.liveinfo .dot.off{color:#9aa8ba!important;animation:none!important}
+html[data-live="0"] .side-live{display:none}
+</style>
+<script id="v42-js">
+/* 로고: 경기 진행 중 → logo-live, 진행 중인 경기가 없을 때 → logo-idle (index.html 과 같은 폴더에 업로드) */
+(()=>{
+const mark=document.querySelector('.brandleft .mark'),txt=document.querySelector('.brandleft .logo'),info=document.querySelector('.liveinfo span');
+const EXT=['png','webp','svg','jpg'];let state=null;
+function show(kind){let i=0;const im=new Image();im.alt='DOYUNGO LIVE';
+ im.onload=()=>{mark.classList.add('v42');mark.replaceChildren(im);txt.style.display=im.naturalWidth/im.naturalHeight>2.2?'none':''};
+ im.onerror=()=>{if(++i<EXT.length)im.src=`/logo-${kind}.${EXT[i]}`;else{mark.classList.remove('v42');mark.textContent='⚾';txt.style.display=''}};
+ im.src=`/logo-${kind}.${EXT[0]}`}
+function setLive(on){if(state===on)return;state=on;document.documentElement.dataset.live=on?'1':'0';show(on?'live':'idle');
+ if(info)info.innerHTML=on?'<b class="dot">●</b> 실시간 경기 중':'<b class="dot off">●</b> 진행 중인 경기 없음'}
+const liveIn=l=>Array.isArray(l)&&l.some(g=>status(g)[0]==='live');
+const _fs=fetchSchedule;fetchSchedule=async function(a,b){const r=await _fs(a,b);if(a===b&&a===today())setLive(liveIn(r));return r};
+setLive(selectedDate===today()&&liveIn(todayGames));
+/* 다른 날짜를 보고 있어도 오늘 경기 진행 여부를 30초마다 확인 */
+const chk=()=>{if(!document.hidden&&selectedDate!==today())fetchSchedule(today(),today()).catch(()=>{})};
+if(selectedDate!==today())chk();setInterval(chk,30000);
+})();
+</script>
 </body></html>
