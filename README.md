@@ -48,3 +48,4 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v42: 헤더 로고 자동 전환 — logo-live.(png|webp|svg|jpg) / logo-idle.(png|webp|svg|jpg) 를 index.html 과 같은 폴더에 올리면 경기 진행 여부에 따라 표시
 - v43: 라인업 패널 중복 제거 — 빠른 조회가 표시되면 데이터 없는 기존 패널 숨김
 - v44: 모바일 하단 탭바가 헤더 안에 갇히던 문제 수정(backdrop-filter 분리)
+- v45: 모바일 하단 탭바를 리퀴드 글래스 캡슐로 교체(잘림/뒤 배경 제거, SVG 아이콘, 슬라이딩 선택 표시)
