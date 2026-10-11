@@ -709,4 +709,17 @@ new MutationObserver(mv).observe(nav,{attributes:true,subtree:true,attributeFilt
  .brandleft .mark.v42 img{-webkit-transform:none!important;transform:none!important}
 }
 </style>
+<style id="v50-css">
+#v50wx{display:inline-flex;align-items:center;gap:5px;text-decoration:none;color:inherit;font-weight:800}
+</style>
+<script id="v50-js">
+/* 날씨 버튼: 지금 선택한 경기의 구장을 weather.html?stadium=... 으로 넘김 */
+(()=>{const bar=document.querySelector('.v20bar');if(!bar)return;
+bar.insertAdjacentHTML('afterbegin','<a id="v50wx" class="glass-btn" href="/weather.html">☁️ 날씨</a>');
+const SM=[['잠실','jamsil'],['고척','gochuk'],['문학','incheon'],['인천','incheon'],['수원','suwon'],['대전','daejeon'],['대구','daegu'],['광주','gwangju'],['창원','changwon'],['마산','changwon'],['사직','busan'],['부산','busan']];
+const upd=()=>{const g=(typeof todayGames!=='undefined'?todayGames:[]).find(x=>String(x.gameId)===String(selectedId));
+ const nm=String(g?(V(g,'stadium','stadiumName','stadiumNm','venue')||''):'');const m=SM.find(([k])=>nm.includes(k));
+ document.getElementById('v50wx').href='/weather.html'+(m?'?stadium='+m[1]:'')};
+const a=document.getElementById('v50wx');a.addEventListener('click',upd);a.addEventListener('touchstart',upd,{passive:true});upd()})();
+</script>
 </body></html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#eef4ff">
+<title>Doyun Weather</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--text:#172033;--sub:#687386;--glass:rgba(255,255,255,.58);--glass2:rgba(255,255,255,.38);--line:rgba(255,255,255,.72);--shadow:0 25px 70px rgba(44,62,92,.15);--blue:#3b82f6;--background:radial-gradient(circle at 10% 0%,#bde3ff 0,transparent 32%),radial-gradient(circle at 100% 25%,#d9ccff 0,transparent 32%),linear-gradient(135deg,#edf6ff,#f8f9ff 50%,#e7f8f4)}
+body.dark{--text:#f7f9ff;--sub:#aab4c7;--glass:rgba(31,40,58,.60);--glass2:rgba(31,40,58,.40);--line:rgba(255,255,255,.13);--shadow:0 25px 70px rgba(0,0,0,.35);--background:radial-gradient(circle at 0% 0%,#17365d 0,transparent 35%),radial-gradient(circle at 100% 30%,#30245d 0,transparent 35%),linear-gradient(135deg,#0c1423,#111827 55%,#102b2a)}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:var(--background);background-attachment:fixed;transition:.5s ease}
+button,input{font:inherit}button{cursor:pointer}
+body::before{content:"";position:fixed;width:300px;height:300px;left:-100px;top:120px;background:#7dd3fc;opacity:.18;filter:blur(90px);border-radius:50%;pointer-events:none}
+body::after{content:"";position:fixed;width:320px;height:320px;right:-120px;bottom:80px;background:#c4b5fd;opacity:.17;filter:blur(100px);border-radius:50%;pointer-events:none}
+.app{width:min(1100px,calc(100% - 24px));margin:auto;padding:max(18px,env(safe-area-inset-top)) 0 max(90px,env(safe-area-inset-bottom))}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 2px 18px}
+.brand{font-size:25px;font-weight:800;letter-spacing:-1.5px}.brand span{font-weight:500;opacity:.48}
+.actions{display:flex;gap:8px}
+.glass-button{width:44px;height:44px;border:1px solid var(--line);color:var(--text);background:var(--glass);backdrop-filter:blur(30px) saturate(150%);-webkit-backdrop-filter:blur(30px) saturate(150%);border-radius:16px;box-shadow:0 10px 35px rgba(40,60,90,.10);transition:.2s}
+.glass-button:active{transform:scale(.92)}
+.back{display:inline-flex;align-items:center;gap:5px;margin:2px 0 4px;padding:9px 15px;border:1px solid var(--line);border-radius:999px;background:var(--glass);backdrop-filter:blur(30px) saturate(150%);-webkit-backdrop-filter:blur(30px) saturate(150%);color:var(--text);font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 10px 35px rgba(40,60,90,.10);transition:.2s}
+.back:active{transform:scale(.95)}
+.fab{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:60;padding:12px 17px;font-size:14px}
+.search{display:flex;gap:9px;margin-bottom:14px}
+.search input{width:100%;height:53px;border:1px solid var(--line);border-radius:19px;outline:none;padding:0 18px;color:var(--text);background:var(--glass);backdrop-filter:blur(30px) saturate(150%);-webkit-backdrop-filter:blur(30px) saturate(150%);box-shadow:var(--shadow)}
+.search input::placeholder{color:var(--sub)}
+.search button{width:58px;border:0;border-radius:19px;color:#fff;background:var(--text)}
+.location{color:var(--sub);font-size:14px;padding:4px 7px 12px}
+.current{position:relative;overflow:hidden;padding:29px;border:1px solid var(--line);border-radius:34px;background:var(--glass);backdrop-filter:blur(35px) saturate(150%);-webkit-backdrop-filter:blur(35px) saturate(150%);box-shadow:var(--shadow)}
+.current::after{content:"";position:absolute;width:180px;height:180px;right:-70px;top:-70px;background:rgba(255,255,255,.35);filter:blur(35px);border-radius:50%}
+.current-top{display:flex;justify-content:space-between;align-items:flex-start}
+.date{font-size:15px;color:var(--sub)}.condition{font-size:20px;font-weight:650;margin-top:6px}
+.weather-icon{font-size:76px;line-height:1;filter:drop-shadow(0 12px 18px rgba(0,0,0,.13))}
+.temperature{font-size:clamp(82px,15vw,135px);line-height:.9;letter-spacing:-9px;font-weight:200;margin:22px 0 15px}
+.feels{color:var(--sub);font-size:15px}.minmax{margin-top:9px;font-size:15px;color:var(--sub)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:28px}
+.stat{min-height:108px;padding:16px;border:1px solid var(--line);border-radius:22px;background:var(--glass2)}
+.stat-icon{font-size:22px}.stat-name{margin-top:8px;color:var(--sub);font-size:12px}.stat-value{margin-top:4px;font-size:16px;font-weight:700}
+.section{margin-top:22px}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:0 5px 12px;font-size:20px;letter-spacing:-.5px}
+.section-sub{color:var(--sub);font-size:12px;font-weight:400}
+.hourly{display:flex;overflow-x:auto;gap:9px;padding:2px 2px 8px;scrollbar-width:none}.hourly::-webkit-scrollbar,.compare-tabs::-webkit-scrollbar,.stadium-tabs::-webkit-scrollbar,.game-hours::-webkit-scrollbar{display:none}
+.hour{min-width:84px;padding:16px 10px;text-align:center;border:1px solid var(--line);border-radius:24px;background:var(--glass);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);box-shadow:0 10px 30px rgba(50,70,100,.07)}
+.hour.active{background:var(--text);color:#fff}.hour-time{font-size:12px;opacity:.7}.hour-icon{font-size:29px;margin:12px 0}.hour-temp{font-size:17px;font-weight:700}.hour-rain{margin-top:5px;font-size:10px;opacity:.65}
+.week{display:flex;flex-direction:column;gap:9px}
+.day{display:grid;grid-template-columns:90px 48px 1fr 100px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:22px;background:var(--glass);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px)}
+.day-name{font-weight:700}.day-icon{font-size:28px}.day-condition{color:var(--sub);font-size:13px}.day-temp{text-align:right;font-weight:700}
+.compare-card{padding:20px;border:1px solid var(--line);border-radius:28px;background:var(--glass);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:var(--shadow)}
+.compare-tabs{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;margin-bottom:18px}
+.compare-tab{white-space:nowrap;border:1px solid var(--line);color:var(--sub);background:var(--glass2);padding:9px 15px;border-radius:15px}.compare-tab.active{color:#fff;background:var(--text)}
+.compare-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.compare-box{padding:15px;border-radius:20px;background:var(--glass2);border:1px solid var(--line)}
+.compare-label{font-size:11px;color:var(--sub)}.compare-number{margin-top:5px;font-size:21px;font-weight:750}
+.chart{position:relative;height:220px;margin-top:22px;padding:12px 0 0}
+.chart-grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between}.grid-line{border-top:1px dashed rgba(120,140,170,.22);width:100%}
+.chart-labels{position:absolute;left:0;top:0;bottom:0;display:flex;flex-direction:column;justify-content:space-between;color:var(--sub);font-size:10px}
+.chart-bars{height:100%;margin-left:34px;display:flex;align-items:flex-end;justify-content:space-around;gap:7px}
+.bar-group{height:100%;flex:1;display:flex;align-items:flex-end;justify-content:center;gap:4px;position:relative}
+.bar{width:13px;min-height:4px;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,#60a5fa,#2563eb);box-shadow:0 5px 15px rgba(37,99,235,.18)}.bar.low{background:linear-gradient(180deg,#a78bfa,#7c3aed)}
+.bar-name{position:absolute;bottom:-20px;font-size:10px;color:var(--sub)}
+.rain-chart{display:flex;align-items:flex-end;gap:10px;height:150px;padding:15px 5px 25px}
+.rain-column{flex:1;height:100%;display:flex;align-items:flex-end;position:relative}
+.rain-bar{width:100%;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,#67e8f9,#3b82f6);min-height:3px}
+.rain-value{position:absolute;top:-18px;width:100%;text-align:center;font-size:10px;color:var(--sub)}
+.sun-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.sun-card{padding:19px;border:1px solid var(--line);border-radius:23px;background:var(--glass);backdrop-filter:blur(25px)}
+.sun-label{color:var(--sub);font-size:12px}.sun-value{margin-top:5px;font-size:24px;font-weight:750}
+.baseball-card{position:relative;overflow:hidden;padding:20px;border:1px solid var(--line);border-radius:30px;background:var(--glass);backdrop-filter:blur(32px) saturate(150%);-webkit-backdrop-filter:blur(32px) saturate(150%);box-shadow:var(--shadow)}
+.baseball-card::before{content:"";position:absolute;width:220px;height:220px;right:-90px;top:-100px;background:rgba(59,130,246,.18);filter:blur(45px);border-radius:50%;pointer-events:none}
+.baseball-top{position:relative;z-index:1}.baseball-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}
+.baseball-title-left{font-size:20px;font-weight:800}.baseball-title-right{color:var(--sub);font-size:12px}
+.stadium-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 1px 9px;scrollbar-width:none}
+.stadium-tab{flex:none;padding:10px 14px;border-radius:17px;border:1px solid var(--line);background:var(--glass2);color:var(--sub);font-size:13px;font-weight:650;white-space:nowrap}
+.stadium-tab.active{color:#fff;background:var(--text);box-shadow:0 8px 20px rgba(0,0,0,.08)}
+.stadium-main{margin-top:10px;padding:20px;border:1px solid var(--line);border-radius:25px;background:rgba(255,255,255,.17)}body.dark .stadium-main{background:rgba(255,255,255,.035)}
+.stadium-head{display:flex;justify-content:space-between;align-items:flex-start}.stadium-name{font-size:25px;font-weight:800;letter-spacing:-.7px}.stadium-city{color:var(--sub);font-size:13px;margin-top:5px}
+.stadium-icon{font-size:55px;line-height:1;filter:drop-shadow(0 8px 12px rgba(0,0,0,.12))}
+.stadium-temp-row{display:flex;align-items:flex-end;gap:14px;margin-top:20px}.stadium-temp{font-size:64px;font-weight:200;letter-spacing:-5px;line-height:.9}.stadium-condition{color:var(--sub);padding-bottom:7px}
+.stadium-info{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:22px}
+.stadium-info-box{padding:13px 10px;border-radius:19px;background:var(--glass2);border:1px solid var(--line)}.stadium-info-label{font-size:10px;color:var(--sub)}.stadium-info-value{margin-top:5px;font-size:15px;font-weight:750}
+.stadium-warning{margin-top:12px;padding:14px 15px;border-radius:19px;font-size:13px;font-weight:700;display:none}
+.stadium-warning.good{display:block;color:#16824d;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.14)}
+.stadium-warning.caution{display:block;color:#a16207;background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.14)}
+.stadium-warning.danger{display:block;color:#dc2626;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.14)}
+body.dark .stadium-warning.good{color:#6ee7a1}body.dark .stadium-warning.caution{color:#fcd34d}body.dark .stadium-warning.danger{color:#fca5a5}
+.game-title{margin-top:22px;margin-bottom:10px;font-size:15px;font-weight:750}
+.game-hours{display:flex;overflow-x:auto;gap:8px;scrollbar-width:none}
+.game-hour{min-width:82px;padding:13px 9px;text-align:center;border-radius:20px;border:1px solid var(--line);background:var(--glass2)}
+.game-hour-time{color:var(--sub);font-size:11px}.game-hour-icon{font-size:25px;margin:8px 0}.game-hour-temp{font-weight:750}.game-hour-rain{color:var(--blue);font-size:10px;margin-top:5px}
+.loading{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(235,241,250,.55);backdrop-filter:blur(22px)}body.dark .loading{background:rgba(8,13,22,.62)}
+.loader{width:42px;height:42px;border:4px solid rgba(120,140,170,.22);border-top-color:var(--text);border-radius:50%;animation:spin .75s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.error{display:none;position:fixed;z-index:2000;left:14px;right:14px;bottom:calc(74px + env(safe-area-inset-bottom));padding:17px 18px;border-radius:21px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(30px);box-shadow:var(--shadow)}
+@media(max-width:700px){.app{width:calc(100% - 16px)}.current{padding:24px 19px;border-radius:29px}.weather-icon{font-size:57px}.temperature{font-size:88px}.stats{grid-template-columns:repeat(2,1fr)}.day{grid-template-columns:72px 42px 1fr 76px;padding:14px 12px}.day-condition{display:none}.compare-box{padding:13px 8px}.compare-number{font-size:18px}.stadium-main{padding:17px}.stadium-name{font-size:21px}.stadium-temp{font-size:56px}.stadium-icon{font-size:46px}.stadium-info{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:400px){.brand{font-size:22px}.temperature{font-size:80px}.weather-icon{font-size:50px}.stadium-temp{font-size:51px}}
+</style>
+</head>
+<body>
+<div class="loading" id="loading"><div class="loader"></div></div>
+<div class="app">
+<a class="back" href="/" onclick="return goBack()">‹ ⚾ 경기로 돌아가기</a>
+<header class="topbar">
+<div class="brand">Doyun <span>Weather</span></div>
+<div class="actions">
+<button class="glass-button" onclick="getLocation()" title="현재 위치">⌖</button>
+<button class="glass-button" onclick="toggleTheme()" id="themeButton">☾</button>
+<button class="glass-button" onclick="loadWeather()">↻</button>
+</div>
+</header>
+<div class="search"><input id="searchInput" placeholder="도시 검색 · 서울, 부산, 대전..."><button onclick="searchCity()">⌕</button></div>
+<div class="location" id="location">📍 서울</div>
+
+<section class="current">
+<div class="current-top"><div><div class="date" id="date">오늘</div><div class="condition" id="condition">불러오는 중...</div></div><div class="weather-icon" id="weatherIcon">☀️</div></div>
+<div class="temperature" id="temperature">--°</div>
+<div class="feels">체감 <span id="feels">--</span>°</div>
+<div class="minmax">최고 <span id="max">--</span>° · 최저 <span id="min">--</span>°</div>
+<div class="stats">
+<div class="stat"><div class="stat-icon">💧</div><div class="stat-name">습도</div><div class="stat-value" id="humidity">--%</div></div>
+<div class="stat"><div class="stat-icon">💨</div><div class="stat-name">바람</div><div class="stat-value" id="wind">-- km/h</div></div>
+<div class="stat"><div class="stat-icon">☔</div><div class="stat-name">강수확률</div><div class="stat-value" id="rain">--%</div></div>
+<div class="stat"><div class="stat-icon">🌡️</div><div class="stat-name">기압</div><div class="stat-value" id="pressure">-- hPa</div></div>
+</div>
+</section>
+
+<section class="section"><h2 class="section-title">시간대별 <span class="section-sub">다음 12시간</span></h2><div class="hourly" id="hourly"></div></section>
+<section class="section"><h2 class="section-title">7일 예보 <span class="section-sub">이번 주</span></h2><div class="week" id="week"></div></section>
+
+<section class="section">
+<h2 class="section-title">예보 비교 <span class="section-sub">최고 · 최저 · 강수</span></h2>
+<div class="compare-card">
+<div class="compare-tabs" id="compareTabs"></div>
+<div class="compare-summary">
+<div class="compare-box"><div class="compare-label">최고기온</div><div class="compare-number" id="compareMax">--°</div></div>
+<div class="compare-box"><div class="compare-label">최저기온</div><div class="compare-number" id="compareMin">--°</div></div>
+<div class="compare-box"><div class="compare-label">강수확률</div><div class="compare-number" id="compareRain">--%</div></div>
+</div>
+<div class="section-title" style="margin-top:25px">기온 비교</div>
+<div class="chart">
+<div class="chart-grid"><div class="grid-line"></div><div class="grid-line"></div><div class="grid-line"></div><div class="grid-line"></div><div class="grid-line"></div></div>
+<div class="chart-labels"><span id="chartTop">--°</span><span id="chartMid">--°</span><span id="chartBottom">--°</span></div>
+<div class="chart-bars" id="temperatureChart"></div>
+</div>
+<div class="section-title" style="margin-top:45px">강수확률 비교</div>
+<div class="rain-chart" id="rainChart"></div>
+</div>
+</section>
+
+<section class="section" id="baseball">
+<h2 class="section-title">⚾ 야구장 날씨 <span class="section-sub">KBO 구장</span></h2>
+<div class="baseball-card"><div class="baseball-top">
+<div class="baseball-title"><div class="baseball-title-left">경기장 선택</div><div class="baseball-title-right">실시간 예보</div></div>
+<div class="stadium-tabs" id="stadiumTabs"></div>
+<div class="stadium-main">
+<div class="stadium-head"><div><div class="stadium-name" id="stadiumName">잠실야구장</div><div class="stadium-city" id="stadiumCity">서울 송파구</div></div><div class="stadium-icon" id="stadiumIcon">☀️</div></div>
+<div class="stadium-temp-row"><div class="stadium-temp" id="stadiumTemp">--°</div><div class="stadium-condition" id="stadiumCondition">불러오는 중...</div></div>
+<div class="stadium-info">
+<div class="stadium-info-box"><div class="stadium-info-label">체감온도</div><div class="stadium-info-value" id="stadiumFeels">--°</div></div>
+<div class="stadium-info-box"><div class="stadium-info-label">습도</div><div class="stadium-info-value" id="stadiumHumidity">--%</div></div>
+<div class="stadium-info-box"><div class="stadium-info-label">바람</div><div class="stadium-info-value" id="stadiumWind">-- km/h</div></div>
+<div class="stadium-info-box"><div class="stadium-info-label">강수확률</div><div class="stadium-info-value" id="stadiumRain">--%</div></div>
+</div>
+<div class="stadium-warning" id="stadiumWarning"></div>
+<div class="game-title">⚾ 경기 시간대 날씨</div>
+<div class="game-hours" id="gameHours"></div>
+</div></div></div>
+</section>
+
+<section class="section">
+<h2 class="section-title">해와 달</h2>
+<div class="sun-grid">
+<div class="sun-card"><div class="sun-label">🌅 일출</div><div class="sun-value" id="sunrise">--:--</div></div>
+<div class="sun-card"><div class="sun-label">🌇 일몰</div><div class="sun-value" id="sunset">--:--</div></div>
+</div>
+</section>
+
+<footer style="text-align:center;color:var(--sub);font-size:11px;margin-top:32px">Doyun Weather · Open-Meteo</footer>
+</div>
+<a class="back fab" href="/" onclick="return goBack()">⚾ 경기</a>
+<div class="error" id="error"></div>
+
+<script>
+let latitude=37.5665,longitude=126.9780,locationName="서울",weatherData=null,selectedDay=0;
+const $=id=>document.getElementById(id);
+const codes={0:["맑음","☀️"],1:["대체로 맑음","🌤️"],2:["부분적으로 흐림","⛅"],3:["흐림","☁️"],45:["안개","🌫️"],48:["안개","🌫️"],51:["이슬비","🌦️"],53:["이슬비","🌦️"],55:["이슬비","🌧️"],61:["비","🌧️"],63:["비","🌧️"],65:["강한 비","🌧️"],71:["약한 눈","🌨️"],73:["눈","🌨️"],75:["강한 눈","❄️"],80:["소나기","🌦️"],81:["소나기","🌦️"],82:["강한 소나기","⛈️"],95:["뇌우","⛈️"],96:["뇌우","⛈️"],99:["강한 뇌우","⛈️"]};
+const info=c=>codes[c]||["날씨","🌡️"];
+const dayName=i=>i===0?"오늘":i===1?"내일":new Date(weatherData.daily.time[i]).toLocaleDateString("ko-KR",{weekday:"short"});
+const showLoading=v=>{$("loading").style.display=v?"flex":"none"};
+
+/* 경기 앱으로 돌아가기: 같은 사이트에서 왔으면 뒤로가기(스크롤·선택 경기 유지), 아니면 홈으로 */
+function goBack(){try{if(document.referrer&&new URL(document.referrer).origin===location.origin&&history.length>1){history.back();return false}}catch(e){}return true}
+
+function error(message){const b=$("error");b.textContent=message;b.style.display="block";setTimeout(()=>{b.style.display="none"},4000)}
+
+async function loadWeather(){
+ showLoading(true);
+ try{
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}`+
+   `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure`+
+   `&hourly=temperature_2m,weather_code,precipitation_probability`+
+   `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset`+
+   `&timezone=Asia%2FSeoul&forecast_days=7`;
+  const r=await fetch(url);if(!r.ok)throw new Error();
+  weatherData=await r.json();
+  renderCurrent();renderHourly();renderWeek();renderComparison();
+  await loadStadiumWeather(selectedStadium);
+  showLoading(false);
+ }catch(e){showLoading(false);error("날씨 정보를 불러오지 못했습니다.")}
+}
+
+function renderCurrent(){
+ const c=weatherData.current,d=weatherData.daily,[condition,icon]=info(c.weather_code);
+ $("location").textContent="📍 "+locationName;
+ $("date").textContent=new Date().toLocaleDateString("ko-KR",{month:"long",day:"numeric",weekday:"long"});
+ $("condition").textContent=condition;$("weatherIcon").textContent=icon;
+ $("temperature").textContent=Math.round(c.temperature_2m)+"°";
+ $("feels").textContent=Math.round(c.apparent_temperature);
+ $("max").textContent=Math.round(d.temperature_2m_max[0]);$("min").textContent=Math.round(d.temperature_2m_min[0]);
+ $("humidity").textContent=c.relative_humidity_2m+"%";$("wind").textContent=Math.round(c.wind_speed_10m)+" km/h";
+ $("rain").textContent=(d.precipitation_probability_max[0]||0)+"%";$("pressure").textContent=Math.round(c.surface_pressure)+" hPa";
+ $("sunrise").textContent=formatTime(d.sunrise[0]);$("sunset").textContent=formatTime(d.sunset[0]);
+}
+
+function renderHourly(){
+ const box=$("hourly"),h=weatherData.hourly,hour=new Date().getHours();let html="";
+ for(let i=hour;i<hour+12;i++){
+  if(!h.time[i])continue;
+  const [,icon]=info(h.weather_code[i]);
+  html+=`<div class="hour ${i===hour?"active":""}"><div class="hour-time">${i===hour?"지금":new Date(h.time[i]).toLocaleTimeString("ko-KR",{hour:"numeric"})}</div><div class="hour-icon">${icon}</div><div class="hour-temp">${Math.round(h.temperature_2m[i])}°</div><div class="hour-rain">💧 ${h.precipitation_probability[i]||0}%</div></div>`;
+ }
+ box.innerHTML=html;
+}
+
+function renderWeek(){
+ const d=weatherData.daily;let html="";
+ for(let i=0;i<7;i++){
+  const [condition,icon]=info(d.weather_code[i]);
+  html+=`<div class="day"><div class="day-name">${dayName(i)}</div><div class="day-icon">${icon}</div><div class="day-condition">${condition}</div><div class="day-temp">${Math.round(d.temperature_2m_max[i])}° / ${Math.round(d.temperature_2m_min[i])}°</div></div>`;
+ }
+ $("week").innerHTML=html;
+}
+
+function renderComparison(){
+ const tabs=$("compareTabs"),d=weatherData.daily;tabs.innerHTML="";
+ for(let i=0;i<7;i++){
+  const b=document.createElement("button");b.className="compare-tab"+(i===selectedDay?" active":"");b.textContent=dayName(i);
+  b.onclick=()=>{selectedDay=i;renderComparison()};tabs.appendChild(b);
+ }
+ $("compareMax").textContent=Math.round(d.temperature_2m_max[selectedDay])+"°";
+ $("compareMin").textContent=Math.round(d.temperature_2m_min[selectedDay])+"°";
+ $("compareRain").textContent=(d.precipitation_probability_max[selectedDay]||0)+"%";
+ drawTemperatureChart();drawRainChart();
+}
+
+function drawTemperatureChart(){
+ const box=$("temperatureChart"),mx=weatherData.daily.temperature_2m_max,mn=weatherData.daily.temperature_2m_min;box.innerHTML="";
+ const all=[...mx,...mn],top=Math.ceil(Math.max(...all)),bottom=Math.floor(Math.min(...all)),range=Math.max(1,top-bottom);
+ $("chartTop").textContent=top+"°";$("chartMid").textContent=Math.round((top+bottom)/2)+"°";$("chartBottom").textContent=bottom+"°";
+ for(let i=0;i<7;i++){
+  const g=document.createElement("div");g.className="bar-group";
+  const hi=document.createElement("div");hi.className="bar";hi.style.height=((mx[i]-bottom)/range*100)+"%";
+  const lo=document.createElement("div");lo.className="bar low";lo.style.height=((mn[i]-bottom)/range*100)+"%";
+  const n=document.createElement("div");n.className="bar-name";n.textContent=dayName(i);
+  g.append(hi,lo,n);box.appendChild(g);
+ }
+}
+
+function drawRainChart(){
+ const box=$("rainChart");box.innerHTML="";
+ for(let i=0;i<7;i++){
+  const v=weatherData.daily.precipitation_probability_max[i]||0;
+  const c=document.createElement("div");c.className="rain-column";
+  const b=document.createElement("div");b.className="rain-bar";b.style.height=Math.max(v,3)+"%";
+  const l=document.createElement("div");l.className="rain-value";l.textContent=v+"%";
+  c.append(b,l);box.appendChild(c);
+ }
+}
+
+const formatTime=v=>new Date(v).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",hour12:false});
+
+function getLocation(){
+ if(!navigator.geolocation){error("이 브라우저에서는 위치 기능을 사용할 수 없습니다.");return}
+ showLoading(true);
+ navigator.geolocation.getCurrentPosition(p=>{latitude=p.coords.latitude;longitude=p.coords.longitude;locationName="현재 위치";loadWeather()},
+  ()=>{showLoading(false);error("위치 권한을 사용할 수 없어 서울 날씨를 표시합니다.")},{enableHighAccuracy:true,timeout:10000});
+}
+
+async function searchCity(){
+ const city=$("searchInput").value.trim();if(!city)return;showLoading(true);
+ try{
+  const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=ko&format=json`);
+  const data=await r.json();if(!data.results||!data.results.length)throw new Error();
+  const p=data.results[0];latitude=p.latitude;longitude=p.longitude;
+  locationName=p.admin1?`${p.name} · ${p.admin1}`:p.name;selectedDay=0;await loadWeather();
+ }catch{showLoading(false);error("검색한 도시를 찾을 수 없습니다.")}
+}
+
+/* 테마: 경기 앱(kbo_dark)과 설정을 공유 */
+function setThemeIcon(){$("themeButton").textContent=document.body.classList.contains("dark")?"☀️":"☾"}
+function toggleTheme(){
+ const dark=document.body.classList.toggle("dark");setThemeIcon();
+ localStorage.setItem("doyun-weather-theme",dark?"dark":"light");
+ try{localStorage.setItem("kbo_dark",JSON.stringify(dark))}catch(e){}
+}
+function initTheme(){
+ let dark=localStorage.getItem("doyun-weather-theme")==="dark";
+ try{const k=JSON.parse(localStorage.getItem("kbo_dark"));if(k!==null)dark=!!k}catch(e){}
+ document.body.classList.toggle("dark",dark);setThemeIcon();
+}
+
+const stadiums={
+ jamsil:{name:"잠실야구장",city:"서울 송파구",lat:37.5121,lon:127.0719},
+ gochuk:{name:"고척스카이돔",city:"서울 구로구",lat:37.4982,lon:126.8671},
+ incheon:{name:"인천 SSG 랜더스필드",city:"인천 미추홀구",lat:37.4369,lon:126.6933},
+ suwon:{name:"수원 KT 위즈파크",city:"경기 수원시",lat:37.2998,lon:127.0098},
+ daejeon:{name:"대전 한화생명볼파크",city:"대전 중구",lat:36.3170,lon:127.4280},
+ daegu:{name:"대구 삼성라이온즈파크",city:"대구 수성구",lat:35.8410,lon:128.6819},
+ gwangju:{name:"광주-기아 챔피언스 필드",city:"광주 북구",lat:35.1681,lon:126.8891},
+ changwon:{name:"창원NC파크",city:"경남 창원시",lat:35.2229,lon:128.5824},
+ busan:{name:"사직야구장",city:"부산 동래구",lat:35.1940,lon:129.0610}
+};
+/* 경기 앱에서 ?stadium=jamsil 처럼 넘어오면 그 구장을 먼저 선택 */
+const fromParam=new URLSearchParams(location.search).get("stadium");
+let selectedStadium=stadiums[fromParam]?fromParam:"jamsil";
+
+function createStadiumTabs(){
+ const box=$("stadiumTabs");box.innerHTML="";
+ Object.entries(stadiums).forEach(([id,s])=>{
+  const b=document.createElement("button");b.className="stadium-tab"+(id===selectedStadium?" active":"");b.textContent=s.name;
+  b.onclick=()=>{selectedStadium=id;document.querySelectorAll(".stadium-tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");loadStadiumWeather(id)};
+  box.appendChild(b);
+ });
+}
+
+async function loadStadiumWeather(id){
+ const s=stadiums[id];if(!s)return;
+ $("stadiumName").textContent=s.name;$("stadiumCity").textContent=s.city;$("stadiumCondition").textContent="날씨 불러오는 중...";
+ try{
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${s.lat}&longitude=${s.lon}`+
+   `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m`+
+   `&hourly=temperature_2m,weather_code,precipitation_probability,wind_speed_10m&timezone=Asia%2FSeoul&forecast_days=2`;
+  const r=await fetch(url);if(!r.ok)throw new Error();
+  renderStadiumWeather(await r.json());
+ }catch(e){error("야구장 날씨를 불러오지 못했습니다.")}
+}
+
+function renderStadiumWeather(data){
+ const c=data.current,[condition,icon]=info(c.weather_code),h=data.hourly;
+ $("stadiumIcon").textContent=icon;$("stadiumTemp").textContent=Math.round(c.temperature_2m)+"°";$("stadiumCondition").textContent=condition;
+ $("stadiumFeels").textContent=Math.round(c.apparent_temperature)+"°";$("stadiumHumidity").textContent=c.relative_humidity_2m+"%";$("stadiumWind").textContent=Math.round(c.wind_speed_10m)+" km/h";
+ const now=new Date();let start=0;
+ for(let i=0;i<h.time.length;i++){if(new Date(h.time[i])>=now){start=i;break}}
+ let gh=[];
+ for(let i=0;i<h.time.length;i++){const hr=new Date(h.time[i]).getHours();if(i>=start&&hr>=18&&hr<=23)gh.push(i)}
+ if(!gh.length){for(let i=start;i<Math.min(start+6,h.time.length);i++)gh.push(i)}
+ let maxRain=0;gh.forEach(i=>{maxRain=Math.max(maxRain,h.precipitation_probability[i]||0)});
+ $("stadiumRain").textContent=maxRain+"%";
+ const w=$("stadiumWarning");w.className="stadium-warning";
+ if(maxRain>=70){w.classList.add("danger");w.textContent="☔ 우천 주의 · 경기 시간대 비가 올 가능성이 높습니다."}
+ else if(maxRain>=40){w.classList.add("caution");w.textContent="🌦️ 우천 가능성 있음 · 경기 전 날씨를 다시 확인하세요."}
+ else{w.classList.add("good");w.textContent="⚾ 경기 시간대 강수 가능성이 낮습니다."}
+ const box=$("gameHours");box.innerHTML="";
+ gh.forEach(i=>{
+  const d=document.createElement("div");d.className="game-hour";
+  d.innerHTML=`<div class="game-hour-time">${new Date(h.time[i]).getHours()}:00</div><div class="game-hour-icon">${info(h.weather_code[i])[1]}</div><div class="game-hour-temp">${Math.round(h.temperature_2m[i])}°</div><div class="game-hour-rain">💧 ${h.precipitation_probability[i]||0}%</div>`;
+  box.appendChild(d);
+ });
+}
+
+$("searchInput").addEventListener("keydown",e=>{if(e.key==="Enter")searchCity()});
+
+initTheme();createStadiumTabs();
+loadWeather().then(()=>{if(stadiums[fromParam])$("baseball").scrollIntoView({behavior:"smooth",block:"start"})});
+</script>
+</body>
+</html>

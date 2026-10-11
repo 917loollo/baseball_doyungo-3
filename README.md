@@ -53,3 +53,4 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v47: 모바일 헤더 블러 레이어 제거(로고가 흐리게 보이던 문제)
 - v48: 상단 고정 블러 띠 제거(iOS 26 스크롤 엣지 블러가 로고에 번지던 문제)
 - v49: 앱 아이콘을 리퀴드 글래스 스타일로 교체(icon-1024/512/192, apple-touch-icon)
+- v50: 날씨 페이지(weather.html) 추가 — 경기 앱 ☁️ 날씨 버튼 ↔ 날씨 페이지 ⚾ 경기로 돌아가기 버튼, 경기 구장 자동 선택
