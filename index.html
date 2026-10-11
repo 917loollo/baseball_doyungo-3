@@ -722,4 +722,11 @@ const upd=()=>{const g=(typeof todayGames!=='undefined'?todayGames:[]).find(x=>S
  document.getElementById('v50wx').href='/weather.html'+(m?'?stadium='+m[1]:'')};
 const a=document.getElementById('v50wx');a.addEventListener('click',upd);a.addEventListener('touchstart',upd,{passive:true});upd()})();
 </script>
+<style id="v51-navfix">
+@media(max-width:760px){
+ /* transform 으로 가운데 정렬하면 iOS Safari 가 backdrop-filter 를 둥근 모서리로 자르지 못함 → transform 제거, 좌우 auto 여백으로 정렬 */
+ .navwrap{left:14px!important;right:14px!important;width:auto!important;max-width:520px;margin-left:auto!important;margin-right:auto!important;transform:none!important;-webkit-transform:none!important}
+ .navwrap .nav{isolation:isolate;overflow:hidden;background-clip:padding-box}
+}
+</style>
 </body></html>
