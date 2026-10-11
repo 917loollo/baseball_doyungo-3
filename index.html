@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="manifest" href="/manifest.json"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta name="theme-color" content="#17213d"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="DOYUNGO"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/png" href="/icon-192.png"><link rel="manifest" href="/manifest.json"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta name="theme-color" content="#17213d"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="DOYUNGO"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://sports-phinf.pstatic.net" crossorigin>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>DOYUNGO LIVE</title>
@@ -699,6 +699,14 @@ new MutationObserver(mv).observe(nav,{attributes:true,subtree:true,attributeFilt
  .top:before{display:none!important}
  .top{isolation:auto!important;background:transparent!important;border-bottom:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
  .brandleft .mark.v42 img{image-rendering:auto;-webkit-transform:translateZ(0);animation:none}
+}
+</style>
+<style id="v48-noedge">
+@media(max-width:760px){
+ /* 화면 맨 위에 고정된 요소가 있으면 iOS 26 Safari 가 그 아래로 자체 블러(스크롤 엣지 효과)를 덧씌움 → 상단 고정 요소 제거 */
+ body:before{display:none!important;content:none!important}
+ .top{position:relative!important;top:auto!important;z-index:1!important}
+ .brandleft .mark.v42 img{-webkit-transform:none!important;transform:none!important}
 }
 </style>
 </body></html>

@@ -51,3 +51,5 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v45: 모바일 하단 탭바를 리퀴드 글래스 캡슐로 교체(잘림/뒤 배경 제거, SVG 아이콘, 슬라이딩 선택 표시)
 - v46: 모바일 헤더가 상태바 뒤로 들어가 번져 보이던 문제 수정(safe-area 적용)
 - v47: 모바일 헤더 블러 레이어 제거(로고가 흐리게 보이던 문제)
+- v48: 상단 고정 블러 띠 제거(iOS 26 스크롤 엣지 블러가 로고에 번지던 문제)
+- v49: 앱 아이콘을 리퀴드 글래스 스타일로 교체(icon-1024/512/192, apple-touch-icon)
