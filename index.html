@@ -729,4 +729,125 @@ const a=document.getElementById('v50wx');a.addEventListener('click',upd);a.addEv
  .navwrap .nav{isolation:isolate;overflow:hidden;background-clip:padding-box}
 }
 </style>
+<style id="v52-css">
+#v52tools .spark{width:100%;height:64px;display:block}
+.v52cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:560px){.v52cols{grid-template-columns:1fr}}
+.v52cd{font-size:26px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.v52wx{display:flex;align-items:center;gap:10px;font-weight:800}.v52wx b{font-size:22px}
+</style>
+<script id="v52-js">
+/* 경기 도구: 시작 카운트다운 · 경기장 날씨 · 승패마진 추이 · 캘린더(.ics) · 링크 복사 · 탭 제목 라이브 점수 */
+(()=>{
+const ST=[['잠실','잠실야구장',37.5121,127.0719],['고척','고척스카이돔',37.4982,126.8671],['문학','인천 SSG 랜더스필드',37.4369,126.6933],['인천','인천 SSG 랜더스필드',37.4369,126.6933],['수원','수원 KT 위즈파크',37.2998,127.0098],['대전','대전 한화생명볼파크',36.3170,127.4280],['대구','대구 삼성라이온즈파크',35.8410,128.6819],['광주','광주 기아 챔피언스 필드',35.1681,126.8891],['창원','창원NC파크',35.2229,128.5824],['마산','창원NC파크',35.2229,128.5824],['사직','사직야구장',35.1940,129.0610],['부산','사직야구장',35.1940,129.0610]];
+const wIcon=c=>c===0?'☀️':c<=2?'🌤️':c===3?'☁️':c<=48?'🌫️':c<=57?'🌦️':c<=67?'🌧️':c<=77?'❄️':c<=82?'🌦️':'⛈️';
+const box=document.createElement('div');box.id='v52tools';($('#v20insight')||$('#selectedDetail')).insertAdjacentElement('afterend',box);
+const wxCache={};let sig='',cdTimer=null,cur=null;
+const gm=id=>todayGames.find(x=>String(x.gameId)===String(id));
+const startOf=g=>{const s=String(V(g,'gameDateTime','startTime','gameDate')||'');return s.length>=16?new Date(s.slice(0,19)+'+09:00'):null};
+const team=(g,k)=>short(V(g,k==='a'?'awayTeamName':'homeTeamName'));
+async function weather(g){const nm=String(V(g,'stadium','stadiumName','stadiumNm','venue')||''),st=ST.find(s=>nm.includes(s[0])),d=startOf(g);if(!st||!d)return null;
+ const key=st[1];let w=wxCache[key];if(!w||Date.now()-w.t>6e5){try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${st[2]}&longitude=${st[3]}&hourly=temperature_2m,precipitation_probability,weather_code&timezone=Asia%2FSeoul&forecast_days=7`);w={t:Date.now(),j:await r.json()};wxCache[key]=w}catch(e){return null}}
+ const h=w.j.hourly,k=String(V(g,'gameDateTime','startTime')).slice(0,13)+':00',i=h.time.indexOf(k);if(i<0)return null;
+ return{name:st[1],t:Math.round(h.temperature_2m[i]),p:h.precipitation_probability[i]||0,c:h.weather_code[i],stadium:st}}
+function margin(tm){const gs=allCache.filter(g=>status(g)[0]==='end'&&isReg(g)&&[team(g,'a'),team(g,'h')].includes(tm));let m=0;const pts=[0];gs.forEach(g=>{const a=+score(g,'away'),h=+score(g,'home');if(!isFinite(a)||!isFinite(h))return;const my=team(g,'a')===tm?a:h,op=team(g,'a')===tm?h:a;if(my>op)m++;else if(my<op)m--;pts.push(m)});return pts}
+function spark(tm,color){const p=margin(tm);if(p.length<3)return`<div class="muted" style="font-size:12px">${esc(tm)} 기록 부족</div>`;
+ const W=300,H=64,mn=Math.min(...p,0),mx=Math.max(...p,0),r=Math.max(1,mx-mn),X=i=>i/(p.length-1)*W,Y=v=>H-6-(v-mn)/r*(H-12),pts=p.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+ const id='sg'+Math.random().toString(36).slice(2,7);
+ return`<div class="v20row" style="border:0;padding-bottom:0"><b>${esc(tm)}</b><span class="muted">승패마진 <b style="color:${color}">${p.at(-1)>0?'+':''}${p.at(-1)}</b></span></div><svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".35"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><line x1="0" x2="${W}" y1="${Y(0)}" y2="${Y(0)}" stroke="#9aa8ba" stroke-dasharray="3 4" stroke-width="1"/><polygon points="0,${H} ${pts} ${W},${H}" fill="url(#${id})"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(p.length-1)}" cy="${Y(p.at(-1))}" r="3.6" fill="${color}"/></svg>`}
+function ics(g){const s=startOf(g);if(!s)return;const f=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d+/,''),e=new Date(s.getTime()+3.5*36e5);
+ const body=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//DOYUNGO LIVE//KO','BEGIN:VEVENT',`UID:${g.gameId}@doyungo`,`DTSTAMP:${f(new Date())}`,`DTSTART:${f(s)}`,`DTEND:${f(e)}`,`SUMMARY:⚾ ${team(g,'a')} vs ${team(g,'h')}`,`LOCATION:${V(g,'stadium','stadiumName')||''}`,'BEGIN:VALARM','TRIGGER:-PT30M','ACTION:DISPLAY','DESCRIPTION:경기 30분 전','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([body],{type:'text/calendar'}));a.download=`${team(g,'a')}-${team(g,'h')}.ics`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+function tick(){const e=document.getElementById('v52cd');if(!e||!cur)return;const s=startOf(cur);if(!s)return;let d=Math.floor((s-Date.now())/1000);if(d<=0){e.textContent='곧 시작';return}const h=Math.floor(d/3600),m=Math.floor(d%3600/60),sec=d%60;e.textContent=(h?h+'시간 ':'')+m+'분 '+String(sec).padStart(2,'0')+'초'}
+async function render(id){const g=gm(id);if(!g){box.innerHTML='';cur=null;return}cur=g;
+ const st=status(g)[0],sg=[id,st,score(g,'away'),score(g,'home'),allCache.length].join('|');if(sg===sig)return;sig=sg;
+ const wx=await weather(g).catch(()=>null),a=team(g,'a'),h=team(g,'h'),pre=st==='pre';
+ box.innerHTML=`<div class="card panel" style="margin-top:12px"><div class="pt">경기 도구</div><div class="pb">
+ ${pre?`<div class="v20row"><span>경기 시작까지</span><span class="v52cd" id="v52cd">--</span></div>`:''}
+ ${wx?`<div class="v20row"><span>${esc(wx.name)} 날씨${pre?' (경기 시작 시각)':''}</span><span class="v52wx"><span>${wIcon(wx.c)}</span><b>${wx.t}°</b><span class="muted">💧 ${wx.p}%${wx.p>=60?' · 우천 주의':''}</span></span></div>`:''}
+ ${allCache.length?`<div class="v52cols" style="margin-top:8px"><div>${spark(a,'#0a84ff')}</div><div>${spark(h,'#ff8916')}</div></div><div class="muted" style="font-size:11px;margin-top:2px">올 시즌 승패마진(승−패) 추이</div>`:'<div class="muted" style="font-size:12px">시즌 추이를 불러오는 중…</div>'}
+ <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">${pre?'<button class="glass-btn" id="v52ics">📅 캘린더에 추가</button>':''}<button class="glass-btn" id="v52link">🔗 링크 복사</button><a class="glass-btn" href="/weather.html${wx?'?stadium='+({'잠실야구장':'jamsil','고척스카이돔':'gochuk'}[wx.name]||'')+'':''}" style="text-decoration:none;color:inherit">☁️ 날씨 더 보기</a></div></div></div>`;
+ const b=document.getElementById('v52ics');if(b)b.onclick=()=>ics(g);
+ document.getElementById('v52link').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);const x=document.getElementById('v52link');x.textContent='복사됨 ✓';setTimeout(()=>x.textContent='🔗 링크 복사',1300)}catch(e){}};
+ clearInterval(cdTimer);if(pre){tick();cdTimer=setInterval(tick,1000)}
+ if(window.ensureSeason&&!allCache.length)window.ensureSeason().then(()=>{sig='';render(selectedId)}).catch(()=>{})}
+const _l=loadDetail;loadDetail=async function(id){const r=await _l(id);render(id);return r};
+/* 탭 제목에 진행 중인 선택 경기의 점수 표시 */
+const base=document.title;setInterval(()=>{const g=cur&&status(cur)[0]==='live'?cur:null;document.title=g?`${team(g,'a')} ${score(g,'away')}:${score(g,'home')} ${team(g,'h')} · ${base}`:base},4000);
+render(selectedId);
+})();
+</script>
+<style id="v53-css">
+.v53hot{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:12px 14px;border-radius:20px;cursor:pointer;color:#fff;background:linear-gradient(120deg,#ff5a36,#ff2d75 55%,#7a3cff);box-shadow:0 14px 30px -14px #ff2d75;font-weight:800;animation:v53in .5s ease}
+.v53hot small{display:block;font-weight:600;opacity:.9;margin-top:2px}.v53hot .fire{font-size:26px}
+@keyframes v53in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.v53btns{display:flex;gap:8px;margin:8px 0}.v53btns .glass-btn{flex:1;font-weight:800}.v53btns .glass-btn.on{background:linear-gradient(135deg,#0a84ff,#5e5ce6);color:#fff;border-color:transparent}
+#v53wp svg{width:100%;height:96px;display:block}
+</style>
+<script id="v53-js">
+/* ① 지금 가장 치열한 경기 ② 라이브 승리 확률 흐름 ③ 승부 예측·직관 기록 (모두 이 기기에만 저장) */
+(()=>{
+const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const tm=(g,k)=>short(V(g,k==='a'?'awayTeamName':'homeTeamName')),gm=id=>todayGames.find(x=>String(x.gameId)===String(id));
+const inn=g=>{const s=fixInn(V(g,'currentInning'),'');const m=s.match(/^(\d+)회(초|말)?/);return m?{n:+m[1],half:m[2]||''}:null};
+const sc=(g,k)=>+score(g,k);
+/* ---------- ① 치열한 경기 ---------- */
+const hot=document.createElement('div');hot.className='v53hot';hot.style.display='none';
+const bar=document.querySelector('.v20bar');(bar||document.getElementById('days')).insertAdjacentElement('afterend',hot);
+const heat=g=>{const i=inn(g);if(!i)return -1;const d=Math.abs(sc(g,'away')-sc(g,'home')),late=Math.min(i.n,9)/9;return Math.round((1/(1+d)*.62+late*.38+(d===0?.08:0))*100)};
+function updHot(){if(selectedDate!==today()){hot.style.display='none';return}
+ const live=todayGames.filter(g=>status(g)[0]==='live').map(g=>({g,h:heat(g)})).filter(x=>x.h>=0).sort((a,b)=>b.h-a.h);
+ if(!live.length){hot.style.display='none';return}const b=live[0],g=b.g,mine=String(g.gameId)===String(selectedId),i=inn(g);
+ hot.style.display='flex';hot.dataset.id=g.gameId;
+ hot.innerHTML=`<span class="fire">🔥</span><div>${mine?'지금 보고 있는 경기가 가장 치열해요':'지금 가장 치열한 경기'}<small>${esc(tm(g,'a'))} ${score(g,'away')} : ${score(g,'home')} ${esc(tm(g,'h'))} · ${i.n}회${i.half} · 열기 ${b.h}${live.length>1?` · 진행 중 ${live.length}경기`:''}</small></div>`}
+hot.onclick=()=>{const c=document.querySelector(`[data-game-id="${hot.dataset.id}"]`);if(c)c.click()};
+/* ---------- ② 승리 확률 흐름 ---------- */
+const erf=x=>{const s=Math.sign(x);x=Math.abs(x);const t=1/(1+.3275911*x);return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x))};
+const Phi=x=>.5*(1+erf(x/Math.SQRT2));
+const done=i=>2*(i.n-1)+(i.half==='말'?1:0);
+const wpOf=(lead,i)=>{const r=Math.max(.25,(18-done(i))/2);return Phi((lead+.15)/(1.41*Math.sqrt(r)))};
+const wbox=document.createElement('div');wbox.id='v53wp';let wsig='';
+const my=document.createElement('div');my.id='v53my';
+const anchor=document.getElementById('v52tools')||document.getElementById('v20insight')||document.getElementById('selectedDetail');
+anchor.insertAdjacentElement('afterend',my);anchor.insertAdjacentElement('afterend',wbox);
+function recWp(){const g=gm(selectedId);if(!g||status(g)[0]==='pre')return;const key='kbo_wp_'+g.gameId;let pts=LS(key,[]);
+ const st=status(g)[0],lead=sc(g,'home')-sc(g,'away');let p=null,x=null;
+ if(st==='end'){p=lead>0?1:lead<0?0:.5;x=Math.max(18,pts.length?pts.at(-1)[0]:18)}else{const i=inn(g);if(!i||!i.half)return;p=wpOf(lead,i);x=done(i)+.5}
+ const last=pts.at(-1);if(!last||Math.abs(last[1]-p)>.004||last[0]!==x){pts.push([x,+p.toFixed(4)]);if(pts.length>400)pts.splice(0,pts.length-400);SV(key,pts)}
+ drawWp(g,pts)}
+function drawWp(g,pts){const sg=g.gameId+'|'+pts.length+'|'+pts.at(-1)?.join();if(sg===wsig)return;wsig=sg;
+ if(pts.length<3){wbox.innerHTML='';return}
+ const W=300,H=96,mx=Math.max(18,pts.at(-1)[0]),X=x=>x/mx*W,Y=p=>H-4-p*(H-8),line=pts.map(q=>`${X(q[0]).toFixed(1)},${Y(q[1]).toFixed(1)}`).join(' '),cur=pts.at(-1)[1],a=tm(g,'a'),h=tm(g,'h');
+ let ticks='';for(let k=3;k<mx;k+=3)ticks+=`<line x1="${X(k)}" x2="${X(k)}" y1="0" y2="${H}" stroke="#9aa8ba" stroke-opacity=".25"/>`;
+ wbox.innerHTML=`<div class="card panel" style="margin-top:12px"><div class="pt">승리 확률 흐름 <small class="muted">이 화면을 열어 둔 동안 기록 · 점수·이닝 기반 추정</small></div><div class="pb">
+ <div class="v20row" style="border:0"><b style="color:#0a84ff">${esc(a)} ${Math.round((1-cur)*100)}%</b><b style="color:#ff8916">${Math.round(cur*100)}% ${esc(h)}</b></div>
+ <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${ticks}<line x1="0" x2="${W}" y1="${H/2}" y2="${H/2}" stroke="#9aa8ba" stroke-dasharray="3 4"/><polyline points="${line}" fill="none" stroke="${cur>=.5?'#ff8916':'#0a84ff'}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(pts.at(-1)[0])}" cy="${Y(cur)}" r="4" fill="${cur>=.5?'#ff8916':'#0a84ff'}"/></svg>
+ <div class="muted" style="font-size:11px;display:flex;justify-content:space-between"><span>1회</span><span>9회</span></div></div></div>`}
+/* ---------- ③ 승부 예측 · 직관 기록 ---------- */
+const picks=()=>LS('kbo_picks',{}),att=()=>LS('kbo_att',{});
+const findG=id=>(typeof allCache!=='undefined'&&allCache.find(g=>String(g.gameId)===String(id)))||gm(id);
+const winner=g=>{if(!g||status(g)[0]!=='end')return null;const a=sc(g,'away'),h=sc(g,'home');return a>h?tm(g,'a'):h>a?tm(g,'h'):'무'};
+function stats(){const P=picks(),A=att();let ok=0,tot=0,streak=0;
+ Object.entries(P).map(([id,v])=>({id,...v})).sort((x,y)=>String(x.d).localeCompare(y.d)||x.id.localeCompare(y.id)).forEach(v=>{const w=winner(findG(v.id));if(!w||w==='무')return;tot++;if(w===v.pick){ok++;streak++}else streak=0});
+ let aw=0,al=0;const mt=typeof myTeam!=='undefined'?myTeam:'';Object.keys(A).forEach(id=>{const g=findG(id),w=winner(g);if(!w||!mt)return;if(![tm(g,'a'),tm(g,'h')].includes(mt))return;if(w===mt)aw++;else if(w!=='무')al++});
+ return{ok,tot,streak,aw,al,mt}}
+let msig='';
+function renderMy(force){const g=gm(selectedId);if(!g){my.innerHTML='';return}
+ const P=picks(),A=att(),id=String(g.gameId),st=status(g)[0],a=tm(g,'a'),h=tm(g,'h'),pk=P[id]&&P[id].pick,w=winner(g),s=stats();
+ const sg=[id,st,pk,!!A[id],s.ok,s.tot,s.aw,s.al,w].join('|');if(!force&&sg===msig)return;msig=sg;
+ let pickHtml='';
+ if(st==='pre')pickHtml=`<div class="muted" style="font-size:12px">경기 시작 전까지 바꿀 수 있어요</div><div class="v53btns"><button class="glass-btn ${pk===a?'on':''}" data-pk="${esc(a)}">${esc(a)} 승</button><button class="glass-btn ${pk===h?'on':''}" data-pk="${esc(h)}">${esc(h)} 승</button></div>`;
+ else if(pk)pickHtml=`<div class="v20row"><span>내 예측</span><b>${esc(pk)} 승 ${w&&w!=='무'?(w===pk?'✅ 적중':'❌ 빗나감'):w==='무'?'(무승부)':'· 결과 대기'}</b></div>`;
+ else pickHtml=`<div class="muted" style="font-size:12px">이 경기는 예측하지 않았어요</div>`;
+ my.innerHTML=`<div class="card panel" style="margin-top:12px"><div class="pt">나의 야구 기록 <small class="muted">이 기기에만 저장</small></div><div class="pb">
+ <div class="v20row" style="border:0"><b>🔮 누가 이길까요?</b></div>${pickHtml}
+ <div class="v20row"><span>예측 적중률</span><b>${s.tot?`${s.ok}/${s.tot} (${Math.round(s.ok/s.tot*100)}%)`:'아직 기록 없음'}${s.streak>1?` · 🔥 ${s.streak}연속`:''}</b></div>
+ <div class="v20row"><span>🏟 직관 승률${s.mt?` (${esc(s.mt)})`:''}</span><b>${s.mt?(s.aw+s.al?`${s.aw}승 ${s.al}패 (${Math.round(s.aw/(s.aw+s.al)*100)}%)`:'아직 기록 없음'):'MY 팀을 설정하세요'}</b></div>
+ <div class="v53btns"><button class="glass-btn ${A[id]?'on':''}" id="v53att">${A[id]?'🏟 직관 기록됨 (누르면 취소)':'🏟 이 경기 직관했어요'}</button></div></div></div>`;
+ my.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{const p=picks();p[id]={pick:b.dataset.pk,d:selectedDate};SV('kbo_picks',p);renderMy(true)});
+ document.getElementById('v53att').onclick=()=>{const x=att();if(x[id])delete x[id];else x[id]={d:selectedDate};SV('kbo_att',x);renderMy(true)};
+ if(window.ensureSeason&&(!allCache.length))window.ensureSeason().then(()=>renderMy(true)).catch(()=>{})}
+const _l=loadDetail;loadDetail=async function(id){const r=await _l(id);wsig='';renderMy();recWp();updHot();return r};
+setInterval(()=>{updHot();recWp()},3000);updHot();renderMy();
+})();
+</script>
 </body></html>

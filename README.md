@@ -55,3 +55,5 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v49: 앱 아이콘을 리퀴드 글래스 스타일로 교체(icon-1024/512/192, apple-touch-icon)
 - v50: 날씨 페이지(weather.html) 추가 — 경기 앱 ☁️ 날씨 버튼 ↔ 날씨 페이지 ⚾ 경기로 돌아가기 버튼, 경기 구장 자동 선택
 - v51: 하단 탭바 모서리 밖으로 튀어나오던 블러 사각형 수정(transform 제거)
+- v52: 경기 도구 패널(시작 카운트다운·경기장 날씨·승패마진 추이·캘린더 .ics·링크 복사), 탭 제목 라이브 점수
+- v53: 지금 가장 치열한 경기 추천, 라이브 승리 확률 흐름 그래프, 승부 예측·직관 기록(적중률/직관 승률)
