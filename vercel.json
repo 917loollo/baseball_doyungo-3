@@ -14,6 +14,9 @@
     },
     "api/doyungo.js": {
       "maxDuration": 10
+    },
+    "api/rank.js": {
+      "maxDuration": 10
     }
   },
   "headers": [

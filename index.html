@@ -287,7 +287,7 @@ function saveMyTeam(t){myTeam=t;localStorage.setItem('kbo_my_team',t);renderMyTe
 function toggleFavorite(id){id=String(id);favoriteGames=favoriteGames.includes(id)?favoriteGames.filter(x=>x!==id):[...favoriteGames,id];localStorage.setItem('kbo_favorite_games',JSON.stringify(favoriteGames));patchGameCards(todayGames)}
 function isReg(g){const d=dateOf(g);return d>='2026-03-28'&&d<'2026-10-14'}
 function teamStandings(games){let m={};teamNames.forEach(t=>m[t]={team:t,gp:0,w:0,l:0,t:0,rs:0,ra:0});games.forEach(g=>{let [st]=status(g);if(st!=='end'||!isReg(g))return;let a=short(V(g,'awayTeamName')),h=short(V(g,'homeTeamName'));let as=Number(score(g,'away')),hs=Number(score(g,'home'));if(!m[a]||!m[h]||!Number.isFinite(as)||!Number.isFinite(hs))return;m[a].gp++;m[h].gp++;m[a].rs+=as;m[a].ra+=hs;m[h].rs+=hs;m[h].ra+=as;if(as>hs){m[a].w++;m[h].l++}else if(as<hs){m[h].w++;m[a].l++}else{m[a].t++;m[h].t++}});let rows=Object.values(m).map(x=>({...x,pct:(x.w+x.l)?x.w/(x.w+x.l):0}));rows.sort((a,b)=>b.pct-a.pct||b.w-a.w||a.l-b.l);let leader=rows[0];rows.forEach((x,i)=>x.rank=i+1);rows.forEach(x=>x.gb=((leader.w-x.w)+(x.l-leader.l))/2);return rows}
-async function loadRank(){currentView='rank';localStorage.setItem('kbo_view','rank');$('#ranking').classList.remove('hidden');$('#teamRankBody').innerHTML='<div class="card empty">팀 순위를 계산하는 중…</div>';try{if(!allCache.length){let ms=['03','04','05','06','07','08','09','10'];let r=await Promise.all(ms.map(m=>fetchSchedule(`2026-${m}-01`,`2026-${m}-${['04','06','09'].includes(m)?30:31}`)));allCache=unique(r.flat())}let rows=teamStandings(allCache);$('#teamRankBody').innerHTML=`<div class="card"><div class="pb scroll"><table class="standings"><thead><tr><th>순위</th><th>팀</th><th>경기</th><th>승</th><th>패</th><th>무</th><th>승률</th><th>게임차</th></tr></thead><tbody>${rows.map(x=>`<tr class="${myTeam===x.team?'myteam':''}"><td class="rankno">${x.rank}</td><td>${badge(x.team,true)}${esc(x.team)}${myTeam===x.team?'<span class="my-pill">MY</span>':''}</td><td>${x.gp}</td><td>${x.w}</td><td>${x.l}</td><td>${x.t}</td><td>${x.pct.toFixed(3)}</td><td>${x.rank===1?'-':x.gb.toFixed(1)}</td></tr>`).join('')}</tbody></table></div></div><div class="my-actions"><button class="glass-btn" onclick="show('my')">★ MY 팀 설정</button><button class="glass-btn" onclick="loadRank()">↻ 순위 새로고침</button></div>`}catch(e){$('#teamRankBody').innerHTML=`<div class="card err">팀 순위를 불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`}}
+async function loadRank(){currentView='rank';localStorage.setItem('kbo_view','rank');$('#ranking').classList.remove('hidden');$('#teamRankBody').innerHTML='<div class="card empty">팀 순위를 계산하는 중…</div>';try{if(!allCache.length&&!window.__official){let ms=['03','04','05','06','07','08','09','10'];let r=await Promise.all(ms.map(m=>fetchSchedule(`2026-${m}-01`,`2026-${m}-${['04','06','09'].includes(m)?30:31}`)));allCache=unique(r.flat())}let rows=teamStandings(allCache);$('#teamRankBody').innerHTML=`<div class="card"><div class="pb scroll"><table class="standings"><thead><tr><th>순위</th><th>팀</th><th>경기</th><th>승</th><th>패</th><th>무</th><th>승률</th><th>게임차</th></tr></thead><tbody>${rows.map(x=>`<tr class="${myTeam===x.team?'myteam':''}"><td class="rankno">${x.rank}</td><td>${badge(x.team,true)}${esc(x.team)}${myTeam===x.team?'<span class="my-pill">MY</span>':''}</td><td>${x.gp}</td><td>${x.w}</td><td>${x.l}</td><td>${x.t}</td><td>${x.pct.toFixed(3)}</td><td>${x.rank===1?'-':x.gb.toFixed(1)}</td></tr>`).join('')}</tbody></table></div></div><div class="my-actions"><button class="glass-btn" onclick="show('my')">★ MY 팀 설정</button><button class="glass-btn" onclick="loadRank()">↻ 순위 새로고침</button></div>`}catch(e){$('#teamRankBody').innerHTML=`<div class="card err">팀 순위를 불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`}}
 function renderMyTeam(){let body=$('#myTeamBody');if(!body)return;let chosen=myTeam||'';body.innerHTML=`<div class="card panel"><div class="pt">응원 팀 선택</div><div class="pb"><div class="myteam-grid">${teamNames.map(t=>`<button class="team-choice ${chosen===t?'selected':''}" onclick="saveMyTeam('${t}')">${badge(t,true)}<span>${t}${chosen===t?'<span class="my-pill">선택됨</span>':''}</span></button>`).join('')}</div></div></div><div class="card panel"><div class="pt">MY 팀 기능</div><div class="pb"><div class="muted">선택한 팀은 경기 카드와 팀 순위에서 강조되고, 새로고침 후에도 유지됩니다.</div><div class="my-actions"><button class="glass-btn" onclick="loadDate(selectedDate)">MY 팀 경기 보기</button><button class="glass-btn" onclick="saveMyTeam('');renderMyTeam()">설정 초기화</button></div></div></div>`}
 function openAI(){const i=$('#aiInput');if(i){i.focus();i.scrollIntoView({behavior:'smooth',block:'center'})}}
 function currentGameContext(){let g=todayGames.find(x=>String(x.gameId)===String(selectedId));if(!g)return `현재 선택된 경기가 없습니다. 선택 날짜: ${selectedDate}. MY 팀: ${myTeam||'설정되지 않음'}.`;let a=V(g,'awayTeamName')||'원정팀',h=V(g,'homeTeamName')||'홈팀';return `선택 날짜: ${selectedDate}. 현재 선택 경기: ${a} vs ${h}. MY 팀: ${myTeam||'설정되지 않음'}. 경기 데이터가 제공된 범위에서만 답변하고, 모르는 정보는 추측하지 마세요.`}
@@ -848,6 +848,27 @@ function renderMy(force){const g=gm(selectedId);if(!g){my.innerHTML='';return}
  if(window.ensureSeason&&(!allCache.length))window.ensureSeason().then(()=>renderMy(true)).catch(()=>{})}
 const _l=loadDetail;loadDetail=async function(id){const r=await _l(id);wsig='';renderMy();recWp();updHot();return r};
 setInterval(()=>{updHot();recWp()},3000);updHot();renderMy();
+})();
+</script>
+<script id="v54-js">
+/* 네이버 스포츠 공식 팀 순위 동기화 (/api/rank). 공식 값이 있으면 순위·승패·승률·게임차를 그 값으로, 득실점은 경기 결과로 계산 */
+(()=>{
+const SEASON='2026',PAGE='https://m.sports.naver.com/kbaseball/record/kbo?seasonCode='+SEASON+'&tab=teamRank';
+const _ts=teamStandings;
+teamStandings=function(g){const base=_ts(g),o=window.__official;if(!o)return base;
+ return base.map(r=>{const x=o[r.team];return x?{...r,gp:x.gp,w:x.w,l:x.l,t:x.t,pct:x.pct,gb:x.gb,rank:x.rank,streak:x.streak}:r}).sort((a,b)=>a.rank-b.rank)};
+let at=0,sig='',failed=false,busy=false;
+async function sync(force){if(busy||(!force&&Date.now()-at<30000))return;busy=true;
+ try{const r=await fetch('/api/rank?season='+SEASON,{cache:'no-store'}),j=await r.json();
+  if(j.ok&&j.teams&&j.teams.length>=8){const m={};j.teams.forEach(x=>{const n=short(x.team);if(teamNames.includes(n))m[n]=x});
+   if(Object.keys(m).length>=8){window.__official=m;at=Date.now();failed=false;const s=JSON.stringify(m);if(s!==sig){sig=s;if(currentView==='rank')loadRank()}else badge();return}}
+  failed=true;window.__officialErr=j.tried||j}catch(e){failed=true}finally{busy=false;badge()}}
+function badge(){const b=document.getElementById('teamRankBody');if(!b||currentView!=='rank')return;b.querySelector('#v54b')?.remove();
+ const s=Math.round((Date.now()-at)/1000),ok=window.__official&&!failed;
+ b.insertAdjacentHTML('afterbegin',`<div id="v54b" class="muted" style="font-size:12px;margin:0 4px 8px">${ok?`✅ 네이버 스포츠 공식 순위와 동기화됨 · ${s<5?'방금':s+'초 전'}`:'⚠️ 공식 순위를 불러오지 못해 경기 결과로 계산한 순위입니다'} · <a href="${PAGE}" target="_blank" rel="noopener" style="color:#0a84ff">네이버에서 보기</a></div>`)}
+const _lr=loadRank;loadRank=async function(){await _lr();badge();sync()};
+sync(true);setInterval(()=>{if(!document.hidden)sync()},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
 })();
 </script>
 </body></html>

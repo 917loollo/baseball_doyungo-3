@@ -57,3 +57,4 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v51: 하단 탭바 모서리 밖으로 튀어나오던 블러 사각형 수정(transform 제거)
 - v52: 경기 도구 패널(시작 카운트다운·경기장 날씨·승패마진 추이·캘린더 .ics·링크 복사), 탭 제목 라이브 점수
 - v53: 지금 가장 치열한 경기 추천, 라이브 승리 확률 흐름 그래프, 승부 예측·직관 기록(적중률/직관 승률)
+- v54: 네이버 스포츠 공식 팀 순위 동기화(/api/rank) — 승·패·무·승률·게임차·순위 반영, 순위 페이지 로딩 단축, diag 점검 추가

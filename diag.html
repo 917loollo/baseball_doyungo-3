@@ -50,6 +50,9 @@ const snip=t=>t.replace(/\s+/g,' ').slice(0,140);
   for(const ep of ['preview','relay']){const q=await get('/api/kbo?path='+encodeURIComponent('/schedule/games/'+gid+'/'+ep));let found=[];
    try{const walk=(o,p)=>{if(!o||typeof o!=='object')return;if(Array.isArray(o)){if(o.length>=5&&o[0]&&typeof o[0]==='object')found.push(p+' ['+o.length+'] 키: '+Object.keys(o[0]).slice(0,12).join(','));return}Object.keys(o).forEach(k=>walk(o[k],p+'.'+k))};walk(JSON.parse(q.t),'')}catch(e){}
    add(found.length?'ok':'wn','라인업 구조 '+ep+' ('+gid+', HTTP '+q.s+')',found.filter(x=>/lineup|entry|batter|player/i.test(x)).slice(0,8).join('\n')||found.slice(0,6).join('\n')||'선수 배열 없음(발표 전일 수 있음)')}}}catch(e){}
+
+ const t7=await get('/api/rank?season=2026');let rj=null;try{rj=JSON.parse(t7.t)}catch(e){}
+ add(rj&&rj.ok?'ok':'no','공식 팀 순위 동기화 /api/rank (HTTP '+t7.s+')',rj?(rj.ok?rj.source+'\n'+rj.teams.map(x=>x.rank+'. '+x.team+' '+x.w+'승 '+x.l+'패 '+x.t+'무 '+x.pct).join('\n'):'가져오지 못함\n'+JSON.stringify(rj.tried,null,1)):snip(t7.t));
  // 5) 브라우저 저장 데이터
  add('ok','진단 완료','이 화면을 캡처하거나 [결과 복사]를 눌러 붙여넣어 주세요.');
 })();
