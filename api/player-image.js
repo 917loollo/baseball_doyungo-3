@@ -2,6 +2,7 @@
 const yr = new Date().getFullYear();
 const NV = 'https://sports-phinf.pstatic.net/player/kbo/default';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/150 Safari/537.36';
+const first = id => ({ u: `${NV}/${id}.png?type=w150`, r: 'https://m.sports.naver.com/' });
 const cands = id => [
   { u: `${NV}/${id}.png?type=f96_96`, r: 'https://sports.news.naver.com/' },
   ...[yr, yr - 1, yr - 2].map(y => ({ u: `https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/person/middle/${y}/${id}.jpg`, r: 'https://www.koreabaseball.com/' })),
@@ -20,7 +21,9 @@ async function tryOne(c) {
 module.exports = async (req, res) => {
   const id = req.query?.playerId;
   if (!id || !/^\d+$/.test(String(id))) return res.status(400).json({ error: 'playerId가 필요합니다.' });
-  const rs = await Promise.all(cands(id).map(c => tryOne(c).catch(e => ({ c, err: String(e?.message || e) }))));
+  const run = list => Promise.all(list.map(c => tryOne(c).catch(e => ({ c, err: String(e?.message || e) }))));
+  let rs = await run([first(id)]);
+  if (!rs[0].ok || req.query?.debug) rs = rs.concat(await run(cands(id)));
   if (req.query?.debug) return res.status(200).json(rs.map(x => ({ url: x.c.u, ok: !!x.ok, status: x.status, type: x.ct, err: x.err, tiny: x.tiny })));
   const hit = rs.find(x => x.ok);
   if (hit) {

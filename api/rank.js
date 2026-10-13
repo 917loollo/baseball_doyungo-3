@@ -44,12 +44,33 @@ function extract(body) {
   if (!out.length) { const s = scanText(body); if (s) out.push(s); }
   return out.sort((a, b) => b.length - a.length)[0] || null;
 }
+
+// KBO 공식 기록실 팀 순위 표(<table> 헤더: 순위/팀명/경기/승/패/무/승률/게임차/최근10경기/연속/홈/방문)
+const txt = s => s.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+function parseKbo(html) {
+  for (const tb of html.match(/<table[\s\S]*?<\/table>/gi) || []) {
+    const rows = (tb.match(/<tr[\s\S]*?<\/tr>/gi) || []).map(r => (r.match(/<t[hd][\s\S]*?<\/t[hd]>/gi) || []).map(txt));
+    const hi = rows.findIndex(r => r.includes('팀명') && r.includes('승률'));
+    if (hi < 0) continue;
+    const H = rows[hi], ix = n => H.indexOf(n), out = [];
+    for (const r of rows.slice(hi + 1)) {
+      if (r.length < H.length - 2) continue;
+      const g = n => (ix(n) >= 0 ? r[ix(n)] : ''), N = v => (isNaN(parseFloat(v)) ? 0 : parseFloat(v));
+      const team = g('팀명'); if (!team) continue;
+      out.push({ team, rank: N(g('순위')), gp: N(g('경기')), w: N(g('승')), l: N(g('패')), t: N(g('무')), pct: N(g('승률')), gb: g('게임차') === '-' ? 0 : N(g('게임차')),
+        l10: g('최근10경기'), streak: g('연속'), home: g('홈'), away: g('방문') });
+    }
+    if (out.length >= 8) return out;
+  }
+  return null;
+}
 let cache = null;
 module.exports = async (req, res) => {
   const season = /^\d{4}$/.test(req.query.season || '') ? req.query.season : String(new Date().getFullYear());
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   if (cache && cache.season === season && Date.now() - cache.t < 20000) { res.setHeader('Cache-Control', 'public, s-maxage=20, stale-while-revalidate=60'); return res.status(200).send(cache.body); }
   const urls = [
+    'https://www.koreabaseball.com/Record/TeamRank/TeamRankDaily.aspx',
     `https://api-gw.sports.naver.com/statistics/categories/kbo/seasons/${season}/teams`,
     `https://api-gw.sports.naver.com/statistics/categories/kbo/seasons/${season}/teams?sortField=ranking&sortDirection=asc`,
     `https://m.sports.naver.com/kbaseball/record/kbo?seasonCode=${season}&tab=teamRank`
@@ -57,9 +78,9 @@ module.exports = async (req, res) => {
   const tried = [];
   for (const u of urls) {
     try {
-      const r = await fetch(u, { headers: { 'User-Agent': UA, Accept: 'application/json,text/html,*/*', 'Accept-Language': 'ko-KR,ko;q=0.9', Referer: 'https://m.sports.naver.com/' }, signal: AbortSignal.timeout(6000) });
+      const r = await fetch(u, { headers: { 'User-Agent': UA, Accept: 'application/json,text/html,*/*', 'Accept-Language': 'ko-KR,ko;q=0.9', Referer: u.includes('koreabaseball') ? 'https://www.koreabaseball.com/' : 'https://m.sports.naver.com/' }, signal: AbortSignal.timeout(6000) });
       const body = await r.text();
-      const rows = r.ok ? extract(body) : null;
+      const rows = r.ok ? (u.includes('koreabaseball.com') ? parseKbo(body) : extract(body)) : null;
       tried.push({ url: u, status: r.status, found: rows ? rows.length : 0 });
       if (rows) {
         rows.forEach((x, i) => { if (x.rank === null) x.rank = i + 1; });
