@@ -58,3 +58,13 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v52: 경기 도구 패널(시작 카운트다운·경기장 날씨·승패마진 추이·캘린더 .ics·링크 복사), 탭 제목 라이브 점수
 - v53: 지금 가장 치열한 경기 추천, 라이브 승리 확률 흐름 그래프, 승부 예측·직관 기록(적중률/직관 승률)
 - v54: 네이버 스포츠 공식 팀 순위 동기화(/api/rank) — 승·패·무·승률·게임차·순위 반영, 순위 페이지 로딩 단축, diag 점검 추가
+- v55: 날씨 페이지 이름을 Weather 로 변경
+- v56: 선수 사진 w150 우선 조회(요청 수 절감), diag 오탐 정리
+- v57: KBO 공식 기록실 순위 동기화, 실제 핸드폰 푸시 알림(sw.js, api/push-*), 사실적인 야구공 앱 아이콘
+
+## 핸드폰 푸시 알림 설정 (한 번만)
+1. Vercel → Storage 에서 Upstash Redis(또는 KV)를 만들어 프로젝트에 연결 → UPSTASH_REDIS_REST_URL / TOKEN 이 자동 추가됩니다.
+2. 사이트주소/api/push-keys 를 열어 나온 VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY 를 환경변수로 추가합니다.
+3. 환경변수 VAPID_SUBJECT = mailto:내이메일, CRON_SECRET = 길고 아무도 모르는 문자열 을 추가하고 재배포합니다.
+4. cron-job.org(무료)에서 1분마다 사이트주소/api/push-cron?key=CRON_SECRET 을 호출하도록 등록합니다. (경기 시간대만 켜 두면 됩니다)
+5. 아이폰: Safari → 공유 → 홈 화면에 추가 → 그 앱을 열어 🔔 알림 켬 → 📲 테스트.

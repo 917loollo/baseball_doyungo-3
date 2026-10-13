@@ -871,4 +871,35 @@ sync(true);setInterval(()=>{if(!document.hidden)sync()},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
 })();
 </script>
+<script id="v57-js">
+/* 실제 핸드폰 푸시 알림: 서비스 워커(sw.js) + 푸시 구독 → /api/push-subscribe, 서버(/api/push-cron)가 경기 이벤트를 보냄 */
+(()=>{
+const toast=m=>{const e=document.getElementById('v20toast');if(!e)return;e.textContent=m;e.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('show'),4500)};
+const ios=/iPhone|iPad|iPod/.test(navigator.userAgent),standalone=navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+const sup='serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const b64=s=>{const r=(s+'='.repeat((4-s.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(r);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))};
+const post=b=>fetch('/api/push-subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
+let reg=null,lastTeam=null;
+const bt=document.getElementById('v20bell'),bar=document.querySelector('.v20bar');
+const test=document.createElement('button');test.className='glass-btn';test.textContent='📲 테스트';test.style.display='none';bar&&bt&&bt.insertAdjacentElement('afterend',test);
+async function getSub(){if(!sup)return null;reg=reg||await navigator.serviceWorker.ready;return reg.pushManager.getSubscription()}
+async function enable(){
+ if(ios&&!standalone){toast('📲 아이폰은 Safari 공유 → "홈 화면에 추가" 후, 그 앱에서 🔔 알림을 켜 주세요');return}
+ if(!sup){toast('이 브라우저는 푸시 알림을 지원하지 않아요');return}
+ if(await Notification.requestPermission()!=='granted'){toast('알림 권한이 꺼져 있어요. 설정에서 허용해 주세요');return}
+ const cfg=await fetch('/api/push-config',{cache:'no-store'}).then(r=>r.json()).catch(()=>({}));
+ if(!cfg.ready){toast('서버 푸시 설정이 아직 안 되어 있어요 (Redis·VAPID 환경변수 필요)');return}
+ try{reg=reg||await navigator.serviceWorker.ready;
+  const sub=(await reg.pushManager.getSubscription())||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(cfg.publicKey)});
+  const j=await post({action:'subscribe',subscription:sub.toJSON(),team:typeof myTeam!=='undefined'?myTeam:''});
+  if(!j.ok)throw Error(j.error||'구독 저장 실패');lastTeam=typeof myTeam!=='undefined'?myTeam:'';test.style.display='';
+  toast('📲 핸드폰 알림이 켜졌어요 — 앱을 닫아도 MY 팀 경기 알림이 와요')}catch(e){toast('알림 설정 실패: '+(e.message||e))}}
+async function disable(){try{const s=await getSub();if(s){await post({action:'unsubscribe',subscription:s.toJSON()}).catch(()=>{});await s.unsubscribe().catch(()=>{})}}catch(e){}test.style.display='none'}
+test.onclick=async()=>{try{const s=await getSub();if(!s){toast('먼저 🔔 알림을 켜 주세요');return}const j=await post({action:'test',subscription:s.toJSON()});toast(j.ok?'📲 테스트 알림을 보냈어요':'테스트 실패: '+(j.error||''))}catch(e){toast('테스트 실패')}};
+if(bt){let last=bt.textContent;new MutationObserver(()=>{const s=bt.textContent;if(s===last)return;last=s;s.includes('켬')?enable():disable()}).observe(bt,{childList:true,characterData:true,subtree:true})}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').then(async()=>{try{const s=await getSub();if(s&&bt&&bt.textContent.includes('켬')){test.style.display='';await post({action:'subscribe',subscription:s.toJSON(),team:typeof myTeam!=='undefined'?myTeam:''});lastTeam=typeof myTeam!=='undefined'?myTeam:''}}catch(e){}}).catch(()=>{});
+/* MY 팀을 바꾸면 알림 대상 팀도 갱신 */
+setInterval(async()=>{try{const t=typeof myTeam!=='undefined'?myTeam:'';if(lastTeam===null||t===lastTeam)return;const s=await getSub();if(s){await post({action:'subscribe',subscription:s.toJSON(),team:t});lastTeam=t}}catch(e){}},15000);
+})();
+</script>
 </body></html>
