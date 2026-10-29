@@ -31,6 +31,6 @@ module.exports = async (req, res) => {
     } catch (e) { /* 투구 위치만 실패해도 스코어보드는 반환 */ }
     return res.status(200).json(sb);
   } catch (e) {
-    return res.status(502).json({ error: 'Daum 연결 실패', detail: String(e?.message || e) });
+    return res.status(502).json({ error: 'Daum 연결 실패', detail: String(e?.message || e) + (e?.cause ? ' [' + (e.cause.code || e.cause.message || e.cause) + ']' : '') });
   }
 };
