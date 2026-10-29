@@ -72,3 +72,4 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v58: 하단 탭바 뒤 네모난 블러 블록 제거(래퍼 backdrop-filter 해제), iOS 26/27식 리퀴드 글래스(림 라이트·하이라이트), 갱신 간격 메뉴를 같은 유리 스타일 팝오버로 교체
 - v59: 경기가 없는 날 '경기 불러오는 중…'에서 영원히 멈추던 버그 수정 (안내 문구 교체), diag 오탐 정리
 - v60: 포스트시즌 경기가 목록에서 걸러지던 문제 수정(categoryId 'kbo' 고정 → kbo* 또는 KBO 10개 구단 팀명으로 판별, 빈 결과 시 categoryId=kbo 재조회, 걸러진 경우 진단 문구 표시), push-cron 동일 적용
+- v61: lib/push.js → 루트 push.js 로 이동 (index.html 과 같은 위치, lib 폴더 제거)
