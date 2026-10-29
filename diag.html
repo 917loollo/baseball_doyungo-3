@@ -26,7 +26,7 @@ const snip=t=>t.replace(/\s+/g,' ').slice(0,140);
  else{
   const paths=[...new Set((h.t.match(/\/api\/[A-Za-z0-9_-]+/g)||[]))];
   add(paths.length?'ok':'no','index.html 이 호출하는 API 주소',paths.join('\n')||'/api/... 주소를 찾지 못했습니다');
-  const bad=paths.filter(p=>!['/api/kbo','/api/doyungo','/api/daum','/api/ai','/api/player-image','/api/rank','/api/push-config','/api/push-subscribe'].includes(p));
+  const bad=paths.filter(p=>!['/api/kbo','/api/doyungo','/api/daum','/api/ai','/api/player-image','/api/rank','/api/push-config','/api/push-subscribe','/api/push-cron','/api/push-keys'].includes(p));
   if(bad.length)add('no','이름이 바뀐 API 주소가 있습니다 → 원인일 가능성 큼',bad.join(', ')+'\n(api 폴더의 파일 이름은 kbo.js / daum.js / ai.js / player-image.js 입니다)');
   add(/id="v3[0-9]|id="v2[0-9]|id="v20/.test(h.t)?'ok':'wn','최신 버전(v20 이상) 코드 포함 여부',/id="v2[0-9]|id="v3[0-9]/.test(h.t)?'포함됨':'확인 불가 — 예전 index.html 일 수 있음');
  }
