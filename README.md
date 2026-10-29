@@ -73,3 +73,5 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v59: 경기가 없는 날 '경기 불러오는 중…'에서 영원히 멈추던 버그 수정 (안내 문구 교체), diag 오탐 정리
 - v60: 포스트시즌 경기가 목록에서 걸러지던 문제 수정(categoryId 'kbo' 고정 → kbo* 또는 KBO 10개 구단 팀명으로 판별, 빈 결과 시 categoryId=kbo 재조회, 걸러진 경우 진단 문구 표시), push-cron 동일 적용
 - v61: lib/push.js → 루트 push.js 로 이동 (index.html 과 같은 위치, lib 폴더 제거)
+- v62: 경기 없음 화면에 서버 응답 진단 문구 항상 표시
+- v63: Vercel 함수 지역을 서울(icn1)로 지정(네이버 해외 IP 차단 대응), 연결 실패 원인 코드 표시

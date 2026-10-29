@@ -209,7 +209,7 @@ function patchGameCards(list){
   const existing=[...wrap.querySelectorAll('[data-game-id]')];
   const incoming=list.map(g=>String(g.gameId));
   const sameOrder=existing.length===incoming.length&&existing.every((el,i)=>el.dataset.gameId===incoming[i]);
-  if(!list.length){ if(!wrap.querySelector('.empty:not(.loading)')) commitHTML(wrap,'<div class="card empty">해당 날짜에 예정된 경기가 없습니다.<br><small>위의 날짜를 눌러 다른 날 경기를 확인해 보세요.</small>'+(window.__schedDbg&&window.__schedDbg.raw>0?'<br><small>(진단: 서버에서 '+window.__schedDbg.raw+'경기를 받았지만 KBO 형식이 아니어서 숨겼어요 · 분류값 '+window.__schedDbg.cats+')</small>':'')+'</div>'); return; }
+  if(!list.length){ if(!wrap.querySelector('.empty:not(.loading)')) commitHTML(wrap,'<div class="card empty">해당 날짜에 예정된 경기가 없습니다.<br><small>위의 날짜를 눌러 다른 날 경기를 확인해 보세요.</small>'+(window.__schedDbg?'<br><small>(진단: 서버 응답 '+window.__schedDbg.raw+'경기 · 분류값 '+(window.__schedDbg.cats||'없음')+' · KBO '+window.__schedDbg.kbo+(window.__schedDbg.retry!==undefined?' · 재조회 '+window.__schedDbg.retry:'')+')</small>':'')+'</div>'); return; }
   if(!sameOrder){ commitHTML(wrap,list.map(g=>gameCard(g,String(g.gameId)===String(selectedId))).join('')); return; }
   list.forEach(g=>{
     const el=wrap.querySelector(`[data-game-id="${CSS.escape(String(g.gameId))}"]`);
