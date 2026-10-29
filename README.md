@@ -75,3 +75,4 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v61: lib/push.js → 루트 push.js 로 이동 (index.html 과 같은 위치, lib 폴더 제거)
 - v62: 경기 없음 화면에 서버 응답 진단 문구 항상 표시
 - v63: Vercel 함수 지역을 서울(icn1)로 지정(네이버 해외 IP 차단 대응), 연결 실패 원인 코드 표시
+- v64: 서버(Vercel)→네이버 연결 실패 시 폰에서 네이버 직접 조회 폴백, ?proxy=주소 로 중계 서버 지정 가능, naver-proxy-worker.js(Cloudflare Worker) 추가
