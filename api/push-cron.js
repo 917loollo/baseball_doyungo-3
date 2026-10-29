@@ -12,7 +12,7 @@ function parse(g) {
   const ds = String(pick(m, 'gameDateTime', 'startTime') || '');
   return { id: String(pick(m, 'gameId')), a: short(pick(m, 'awayTeamName', 'awayName')), h: short(pick(m, 'homeTeamName', 'homeName')), st,
     as: n(pick(m, 'awayTeamScore', 'awayScore')), hs: n(pick(m, 'homeTeamScore', 'homeScore')), inn: String(pick(m, 'currentInning') || ''),
-    start: ds.length >= 16 ? new Date(ds.slice(0, 19) + '+09:00').getTime() : 0, ok: pick(m, 'categoryId') === 'kbo' };
+    start: ds.length >= 16 ? new Date(ds.slice(0, 19) + '+09:00').getTime() : 0, ok: /^kbo/i.test(String(pick(m, 'categoryId') || '')) || (TEAMS.some(x => String(pick(m, 'awayTeamName', 'awayName')).includes(x)) && TEAMS.some(x => String(pick(m, 'homeTeamName', 'homeName')).includes(x))) };
 }
 function events(prev, g) {
   const out = [], line = `${g.a} ${g.as} : ${g.hs} ${g.h}`, tag = 'g' + g.id;
