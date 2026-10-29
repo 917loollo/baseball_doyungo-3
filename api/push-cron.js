@@ -1,5 +1,5 @@
 // 1분마다(또는 30초마다) 호출: 오늘 경기를 읽어 시작/득점/종료/30분 전 이벤트를 찾아 구독자에게 푸시를 보냅니다.
-const { R, vapid } = require('../lib/push.js');
+const { R, vapid } = require('../push.js');
 const TEAMS = ['LG', '두산', '삼성', 'SSG', 'KT', '한화', '롯데', 'KIA', 'NC', '키움'];
 const short = n => TEAMS.find(t => String(n).includes(t)) || String(n || '');
 const lk = o => { const m = {}; for (const k in o) m[k.toLowerCase()] = o[k]; return m; };
