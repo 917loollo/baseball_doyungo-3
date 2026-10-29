@@ -179,7 +179,7 @@ function badge(n,mini=false){let s=short(n),c=colors[s]||'#68798d',cls=mini?'min
 function score(g,s){return V(g,s+'TeamScore',s+'Score',s+'ScoreValue')??'-'}
 function fixInn(s,half){s=String(s??'');const n=(s.match(/\d+/)||[''])[0];if(!n)return '';const h=/말/.test(s)?'말':/초/.test(s)?'초':(String(half)==='0'?'초':String(half)==='1'?'말':'');return n+'회'+h}
 function status(g){let x=String(V(g,'statusCode','status','gameStatus')||'').toUpperCase();if(/RESULT|END|FINAL|FINISH/.test(x))return ['end','경기 종료'];if(/START|LIVE|ING/.test(x))return ['live','LIVE'];return ['pre','경기 예정']}
-function valid(g){let a=V(g,'awayTeamName','awayName'),h=V(g,'homeTeamName','homeName');return g?.gameId&&a&&h&&a!=='-'&&h!=='-'&&V(g,'categoryId')==='kbo'}
+function valid(g){let a=V(g,'awayTeamName','awayName'),h=V(g,'homeTeamName','homeName');return g?.gameId&&a&&h&&a!=='-'&&h!=='-'&&(()=>{const c=String(V(g,'categoryId')||''),K=['LG','두산','삼성','SSG','KT','한화','롯데','KIA','NC','키움'];return c==='kbo'||/^kbo/i.test(c)||(K.some(x=>String(a).includes(x))&&K.some(x=>String(h).includes(x)))})()}
 function unique(a){let m=new Map();A(a).forEach(g=>{if(valid(g))m.set(String(g.gameId),g)});return [...m.values()]}
 function gameCard(g,sel=false){let [k,l]=status(g),a=V(g,'awayTeamName'),h=V(g,'homeTeamName'),ing=V(g,'currentInning'),time=V(g,'gameDateTime','startTime','gameTime')||'';return `<article class="gamecard ${sel?'sel':''} ${(myTeam&&[a,h].some(x=>short(x)===myTeam))?'my-game':''}" data-game-id="${esc(g.gameId)}" onclick="selectGame('${esc(g.gameId)}')"><div class="gamehead"><span>${esc(time)}</span><span class="${k==='live'?'livec':k==='pre'?'prevc':'endc'}">${k==='live'?'● ':''}${k==='pre'?'':(ing?ing+'회':'')}</span></div><div class="gteams"><div class="gteam">${badge(a)}${esc(short(a))}</div><div><div class="gscore">${esc(score(g,'away'))}:${esc(score(g,'home'))}</div><div class="gstatus ${k==='live'?'livec':k==='pre'?'prevc':'endc'}">${k==='pre'?'예정':k==='end'?'종료':(ing?ing+'회말':'LIVE')}</div></div><div class="gteam">${badge(h)}${esc(short(h))}</div></div><button class="favbtn" aria-label="즐겨찾기" onclick="event.stopPropagation();toggleFavorite('${esc(g.gameId)}')">${favoriteGames.includes(String(g.gameId))?'★':'☆'}</button></article>`}
 let currentView=localStorage.getItem('kbo_view')||'today',selectedId=localStorage.getItem('kbo_selected_game')||null,todayGames=[],allCache=[],allMonth='all';
@@ -189,7 +189,12 @@ let favoriteGames=JSON.parse(localStorage.getItem('kbo_favorite_games')||'[]');
 function setClock(){let d=new Date(),s=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(d).replaceAll('.','');$('#clock').textContent=s}
 function makeDays(){let d=new Date((selectedDate||today())+'T12:00:00');let arr=[];for(let i=-1;i<6;i++){let x=new Date(d);x.setDate(d.getDate()+i);let y=x.getFullYear(),m=String(x.getMonth()+1).padStart(2,'0'),da=String(x.getDate()).padStart(2,'0');let ds=`${y}-${m}-${da}`,w=['일','월','화','수','목','금','토'][x.getDay()];arr.push([ds,`${Number(m)}.${Number(da)} (${w})`])}$('#days').innerHTML='<button class="arrow" onclick="shiftDays(-1)">‹</button>'+arr.map(x=>`<button class="${x[0]===selectedDate?'on':''}" data-date="${x[0]}" onclick="loadDate('${x[0]}',this)">${x[1]}</button>`).join('')+'<button class="arrow" onclick="shiftDays(1)">›</button>'}
 let dateOffset=0;function shiftDays(n){let base=new Date(selectedDate+'T12:00:00');base.setDate(base.getDate()+n);selectedDate=base.toISOString().slice(0,10);localStorage.setItem('kbo_selected_date',selectedDate);makeDays();loadDate(selectedDate)}
-async function fetchSchedule(from,to){let r=await api(`/schedule/games?upperCategoryId=kbaseball&fromDate=${from}&toDate=${to}`);return unique(r.games||r.scheduleGames||r)}
+async function fetchSchedule(from,to){
+  const base=`/schedule/games?upperCategoryId=kbaseball&fromDate=${from}&toDate=${to}`;
+  const r=await api(base),raw=A(r.games||r.scheduleGames||r);let out=unique(raw);
+  window.__schedDbg={raw:raw.length,cats:[...new Set(raw.map(g=>V(g,'categoryId')))].slice(0,6).join(','),kbo:out.length};
+  if(!out.length){try{const r2=await api(base+'&categoryId=kbo'),raw2=A(r2.games||r2.scheduleGames||r2),o2=unique(raw2);window.__schedDbg.retry=raw2.length;if(o2.length)out=o2}catch(e){}}
+  return out}
 let loadToken=0,detailToken=0;
 function commitHTML(el,html){
   if(!el)return;
@@ -204,7 +209,7 @@ function patchGameCards(list){
   const existing=[...wrap.querySelectorAll('[data-game-id]')];
   const incoming=list.map(g=>String(g.gameId));
   const sameOrder=existing.length===incoming.length&&existing.every((el,i)=>el.dataset.gameId===incoming[i]);
-  if(!list.length){ if(!wrap.querySelector('.empty')) commitHTML(wrap,'<div class="card empty">해당 날짜에 등록된 DOYUNGO 경기가 없습니다.</div>'); return; }
+  if(!list.length){ if(!wrap.querySelector('.empty:not(.loading)')) commitHTML(wrap,'<div class="card empty">해당 날짜에 예정된 경기가 없습니다.<br><small>위의 날짜를 눌러 다른 날 경기를 확인해 보세요.</small>'+(window.__schedDbg&&window.__schedDbg.raw>0?'<br><small>(진단: 서버에서 '+window.__schedDbg.raw+'경기를 받았지만 KBO 형식이 아니어서 숨겼어요 · 분류값 '+window.__schedDbg.cats+')</small>':'')+'</div>'); return; }
   if(!sameOrder){ commitHTML(wrap,list.map(g=>gameCard(g,String(g.gameId)===String(selectedId))).join('')); return; }
   list.forEach(g=>{
     const el=wrap.querySelector(`[data-game-id="${CSS.escape(String(g.gameId))}"]`);
@@ -220,7 +225,7 @@ async function loadDate(d,btn){
   if(btn)btn.classList.add('on');
   $('#todayLabel').textContent=d===today()?'오늘 경기':d.replaceAll('-','.')+' 경기';
   const firstLoad=!todayGames.length;
-  if(firstLoad && !$('#games').querySelector('.gamecard')) $('#games').innerHTML='<div class="card empty">경기 불러오는 중…</div>';
+  if(firstLoad && !$('#games').querySelector('.gamecard')) $('#games').innerHTML='<div class="card empty loading">경기 불러오는 중…</div>';
   const token=++loadToken;
   try{
     const fresh=await fetchSchedule(d,d);
@@ -900,6 +905,60 @@ if(bt){let last=bt.textContent;new MutationObserver(()=>{const s=bt.textContent;
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').then(async()=>{try{const s=await getSub();if(s&&bt&&bt.textContent.includes('켬')){test.style.display='';await post({action:'subscribe',subscription:s.toJSON(),team:typeof myTeam!=='undefined'?myTeam:''});lastTeam=typeof myTeam!=='undefined'?myTeam:''}}catch(e){}}).catch(()=>{});
 /* MY 팀을 바꾸면 알림 대상 팀도 갱신 */
 setInterval(async()=>{try{const t=typeof myTeam!=='undefined'?myTeam:'';if(lastTeam===null||t===lastTeam)return;const s=await getSub();if(s){await post({action:'subscribe',subscription:s.toJSON(),team:t});lastTeam=t}}catch(e){}},15000);
+})();
+</script>
+<style id="v58-glass">
+@media(max-width:760px){
+ /* ① 바깥 래퍼에 남아 있던 backdrop-filter 때문에 캡슐 뒤에 네모난 블러 블록이 생기고, 안쪽 유리 효과도 뭉개졌음 → 래퍼는 완전히 투명하게 */
+ .navwrap{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:none!important;box-shadow:none!important;border:0!important;border-radius:0!important;filter:none!important}
+ /* ② iOS 26/27 리퀴드 글래스: 투명한 유리 + 가장자리 림 라이트 + 은은한 하이라이트 */
+ .navwrap .nav{background:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,.12))!important;
+  -webkit-backdrop-filter:blur(16px) saturate(200%) brightness(1.06);backdrop-filter:blur(16px) saturate(200%) brightness(1.06);
+  border:0!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 -1px 0 rgba(255,255,255,.22),0 14px 34px -10px rgba(15,27,45,.30),0 2px 6px rgba(15,27,45,.08)!important}
+ .navwrap .nav:after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.2px;pointer-events:none;z-index:3;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,.18) 30%,rgba(255,255,255,.10) 62%,rgba(255,255,255,.75) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+ .v45pill{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.60))!important;
+  box-shadow:inset 0 1px 1px #fff,inset 0 -1px 3px rgba(15,27,45,.07),0 6px 16px -6px rgba(15,27,45,.30),0 0 0 .5px rgba(15,27,45,.05)!important}
+ .navwrap .nav button{font-size:10.5px!important;font-weight:650!important}
+}
+/* ③ 갱신 간격 메뉴: 기본 select 대신 같은 리퀴드 글래스 팝오버 */
+.v58sel{position:relative;display:inline-block}.v58sel select{pointer-events:none}
+.v58hit{position:absolute;inset:0;background:transparent;border:0;padding:0;border-radius:inherit;-webkit-tap-highlight-color:transparent}
+.v58bd{position:fixed;inset:0;z-index:9998;background:transparent}
+.v58menu{position:fixed;z-index:9999;min-width:200px;padding:8px;border-radius:28px;
+ background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(250,250,255,.55));
+ -webkit-backdrop-filter:blur(28px) saturate(200%);backdrop-filter:blur(28px) saturate(200%);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 24px 60px -12px rgba(15,27,45,.40),0 4px 14px rgba(15,27,45,.12);
+ animation:v58in .34s cubic-bezier(.2,1.25,.3,1) both}
+.v58menu:after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.2px;pointer-events:none;
+ background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.2) 40%,rgba(255,255,255,.12) 65%,rgba(255,255,255,.7));
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.v58menu.out{animation:v58out .16s ease-in both}
+@keyframes v58in{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:scale(1)}}
+@keyframes v58out{to{opacity:0;transform:scale(.9)}}
+.v58it{display:flex;align-items:center;width:100%;height:50px;padding:0 18px 0 8px;border:0;border-radius:20px;background:transparent;color:#10213b;font:500 17px/1 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;text-align:left;letter-spacing:-.01em}
+.v58it i{flex:0 0 30px;font-style:normal;color:#10213b;font-size:17px;font-weight:700;text-align:center}
+.v58it:active{background:rgba(120,120,128,.16)}
+</style>
+<script id="v58-js">
+(()=>{const sel=document.getElementById('v20iv');if(!sel)return;
+const w=document.createElement('span');w.className='v58sel';sel.parentNode.insertBefore(w,sel);w.appendChild(sel);
+const hit=document.createElement('button');hit.type='button';hit.className='v58hit';hit.setAttribute('aria-label','갱신 간격');w.appendChild(hit);
+let open=null;
+function close(){if(!open)return;const{m,b}=open;open=null;m.classList.add('out');setTimeout(()=>{m.remove();b.remove()},150)}
+hit.addEventListener('click',()=>{if(open)return close();
+ const b=document.createElement('div');b.className='v58bd';const m=document.createElement('div');m.className='v58menu';m.setAttribute('role','menu');
+ [...sel.options].forEach(o=>{const it=document.createElement('button');it.type='button';it.className='v58it';it.setAttribute('role','menuitemradio');
+  it.innerHTML='<i>'+(o.value===sel.value?'✓':'')+'</i>'+o.textContent;
+  it.onclick=()=>{sel.value=o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));if(navigator.vibrate)navigator.vibrate(8);close()};m.appendChild(it)});
+ document.body.append(b,m);
+ const r=hit.getBoundingClientRect(),mw=m.offsetWidth,mh=m.offsetHeight,vw=innerWidth,vh=innerHeight;
+ const left=Math.max(12,Math.min(r.left,vw-mw-12)),below=r.bottom+8+mh<=vh-12,top=below?r.bottom+8:Math.max(12,r.top-8-mh);
+ m.style.left=left+'px';m.style.top=top+'px';m.style.transformOrigin=(Math.max(0,r.left+r.width/2-left))+'px '+(below?'0':'100%');
+ b.addEventListener('click',close);open={m,b}});
+addEventListener('keydown',e=>{if(e.key==='Escape')close()});addEventListener('scroll',close,{passive:true});
 })();
 </script>
 </body></html>
