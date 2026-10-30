@@ -167,10 +167,12 @@ function pitchView(r,c,batter,pitch,pid,away,home,half,ing,dm){let lastText=dm&&
  return `<div class="pv"><div class="pv-top"><div class="pv-pl"><div><span>투수</span><b>${playerPhoto(pitch)}${esc(name(pitch))}</b><i>${esc(pc!=null?pc+'구':'')}</i></div><div><span class="bt">타자</span><b>${playerPhoto(batter)}${esc(name(batter))}</b><i>${esc(lastTxt)}</i></div></div><div class="pv-sc"><div class="pv-in">${ing?`${String(half)==='0'?'▲':'▼'}<b>${esc(ing)}</b>`:'<b>경기 예정</b>'}</div><div class="pv-tm"><div><em>${esc(short(away))}</em><b>${esc(sc('away'))}</b></div><div class="h"><em>${esc(short(home))}</em><b>${esc(sc('home'))}</b></div></div><div class="pv-bs"><svg viewBox="0 0 60 44" width="60" height="44">${base(30,12,on('base2'))}${base(46,26,on('base1'))}${base(14,26,on('base3'))}</svg><div>${esc(V(c,'ball')??0)}-${esc(V(c,'strike')??0)}<small>${out} OUT</small></div></div></div></div><svg class="pv-z" viewBox="0 0 270 300" preserveAspectRatio="xMidYMid meet"><rect class="bg" width="270" height="300"/><defs><clipPath id="szc"><rect x="${L}" y="${T}" width="${W}" height="${H}" rx="12"/></clipPath></defs><rect class="zn" x="${L}" y="${T}" width="${W}" height="${H}" rx="12"/><g class="gl" clip-path="url(#szc)">${lines}</g><path class="hp" d="M120 280 l15 -8 h0 l15 8 l-6 8 h-18z" transform="translate(0 -6)"/>${dots}${ps.length?'':`<text class="nodata" x="135" y="60">투구 추적 데이터 대기 중</text>`}</svg></div>`}
 function pitchCount0(r,pid){let n=pitcherCount(r,pid);return n||null}
 
+const tfetch=(u,o,ms)=>{const c=new AbortController(),t0=Date.now();let h;const log=s=>{(window.__apiLog=window.__apiLog||[]).push(decodeURIComponent(u).replace(/^https?:\/\/[^/]+/,'').slice(0,64)+' → '+s+' ('+(Date.now()-t0)+'ms)');if(window.__apiLog.length>6)window.__apiLog.shift()};
+  return Promise.race([fetch(u,{...o,signal:c.signal}),new Promise((_,rej)=>{h=setTimeout(()=>{try{c.abort()}catch{}rej(Error('응답 지연 '+Math.round(ms/1000)+'초'))},ms)})]).then(r=>{clearTimeout(h);log('HTTP '+r.status);return r},e=>{clearTimeout(h);log('실패: '+(e&&e.message||e));throw e})};
 const kbProxy=()=>{try{const q=new URLSearchParams(location.search).get('proxy');if(q)localStorage.setItem('kb_proxy',q);return localStorage.getItem('kb_proxy')}catch{return null}};
-const api=async p=>{let last;for(let n=0;n<2;n++){try{const r=await fetch((window.__kb||kbProxy()||'/api/kbo')+'?path='+encodeURIComponent(p),{cache:'no-store'}),t=await r.text();let j;try{j=JSON.parse(t)}catch{throw Error(r.status===404?'서버 함수(/api/kbo)를 찾을 수 없습니다. api 폴더가 index.html과 같은 위치에 함께 배포됐는지 확인하세요 (HTTP 404)':'API 응답을 읽을 수 없습니다 (HTTP '+r.status+(t?' · '+t.replace(/\s+/g,' ').slice(0,50):'')+')')}if(!r.ok)throw Error(j.error||('API '+r.status));return j.result??j}catch(e){last=e;if(/HTTP 404/.test(e.message))window.__kb=window.__kb==='/api/doyungo'?'/api/kbo':'/api/doyungo';if(!n)await new Promise(r=>setTimeout(r,700))}}
+const api=async p=>{let last;for(let n=0;n<2;n++){try{const r=await tfetch((window.__kb||kbProxy()||'/api/kbo')+'?path='+encodeURIComponent(p),{cache:'no-store'},window.__T||9000),t=await r.text();let j;try{j=JSON.parse(t)}catch{throw Error(r.status===404?'서버 함수(/api/kbo)를 찾을 수 없습니다. api 폴더가 index.html과 같은 위치에 함께 배포됐는지 확인하세요 (HTTP 404)':'API 응답을 읽을 수 없습니다 (HTTP '+r.status+(t?' · '+t.replace(/\s+/g,' ').slice(0,50):'')+')')}if(!r.ok)throw Error(j.error||('API '+r.status));return j.result??j}catch(e){last=e;if(/HTTP 404/.test(e.message))window.__kb=window.__kb==='/api/doyungo'?'/api/kbo':'/api/doyungo';if(!n)await new Promise(r=>setTimeout(r,700))}}
   /* 서버가 네이버에 못 닿을 때: 한국에 있는 내 폰에서 직접 조회 시도 */
-  if(!window.__noDirect){try{const r=await fetch('https://api-gw.sports.naver.com'+p,{cache:'no-store'}),j=await r.json();if(r.ok){window.__direct=1;return j.result??j}}catch(e){window.__noDirect=1;window.__directErr=String(e&&e.message||e)}}
+  if(!window.__noDirect){try{const r=await tfetch('https://api-gw.sports.naver.com'+p,{cache:'no-store'},Math.min(6000,window.__T||6000)),j=await r.json();if(r.ok){window.__direct=1;return j.result??j}}catch(e){window.__noDirect=1;window.__directErr=String(e&&e.message||e)}}
   if(window.__directErr&&last)last.message+=' · 폰 직접조회도 실패('+window.__directErr+')';
   throw last};
 const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -194,21 +196,28 @@ let favoriteGames=JSON.parse(localStorage.getItem('kbo_favorite_games')||'[]');
 function setClock(){let d=new Date(),s=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(d).replaceAll('.','');$('#clock').textContent=s}
 function makeDays(){let d=new Date((selectedDate||today())+'T12:00:00');let arr=[];for(let i=-1;i<6;i++){let x=new Date(d);x.setDate(d.getDate()+i);let y=x.getFullYear(),m=String(x.getMonth()+1).padStart(2,'0'),da=String(x.getDate()).padStart(2,'0');let ds=`${y}-${m}-${da}`,w=['일','월','화','수','목','금','토'][x.getDay()];arr.push([ds,`${Number(m)}.${Number(da)} (${w})`])}$('#days').innerHTML='<button class="arrow" onclick="shiftDays(-1)">‹</button>'+arr.map(x=>`<button class="${x[0]===selectedDate?'on':''}" data-date="${x[0]}" onclick="loadDate('${x[0]}',this)">${x[1]}</button>`).join('')+'<button class="arrow" onclick="shiftDays(1)">›</button>'}
 let dateOffset=0;function shiftDays(n){let base=new Date(selectedDate+'T12:00:00');base.setDate(base.getDate()+n);selectedDate=base.toISOString().slice(0,10);localStorage.setItem('kbo_selected_date',selectedDate);makeDays();loadDate(selectedDate)}
+/* 목록에 안 나오는 경기를 ID로 직접 추가: 사이트주소/?game=55551030SSHT02026 (쉼표로 여러 개, 이 기기에 저장) */
+async function withPinned(list,d){
+  try{const q=new URLSearchParams(location.search).get('game');if(q)localStorage.setItem('kbo_pin',q.trim());
+    const ids=(localStorage.getItem('kbo_pin')||'').split(',').map(s=>s.trim()).filter(x=>/^[0-9A-Za-z]{10,24}$/.test(x));
+    for(const id of ids){if(list.some(g=>String(g.gameId)===id))continue;
+      const r=await api('/schedule/games/'+encodeURIComponent(id)),g=r.game||r.scheduleGame||r;
+      if(g&&g.gameId&&String(V(g,'gameDateTime')||'').slice(0,10)===d&&valid(g))list=[...list,g]}
+  }catch(e){}
+  return list}
 async function fetchSchedule(from,to){
   const rng=`fromDate=${from}&toDate=${to}`;
   const tries=[['기본',`/schedule/games?upperCategoryId=kbaseball&${rng}`],
     ['kbo지정',`/schedule/games?upperCategoryId=kbaseball&categoryId=kbo&${rng}`],
     ['필드+500',`/schedule/games?fields=basic,schedule,baseball&upperCategoryId=kbaseball&categoryId=kbo&${rng}&size=500`],
     ['상위없음',`/schedule/games?categoryId=kbo&${rng}`]];
-  let out=[];const dbg={raw:0,cats:'',kbo:0,tries:[]};window.__schedDbg=dbg;
-  for(const [nm,p] of tries){
-    try{const r=await api(p),raw=A(r.games||r.scheduleGames||r),o=unique(raw);
-      const cats=[...new Set(raw.map(g=>V(g,'categoryId')))].slice(0,4).join('/');
-      dbg.tries.push(nm+' '+raw.length+'→'+o.length+(cats?'('+cats+')':''));
-      if(nm==='기본'){dbg.raw=raw.length;dbg.cats=cats}
-      if(o.length){out=o;dbg.kbo=o.length;dbg.used=nm;break}
-    }catch(e){dbg.tries.push(nm+' 실패');if(nm==='기본'&&!out.length&&String(e.message).match(/서버|연결|timeout|fetch/i)){throw e}}}
-  return out}
+  const dbg={raw:0,cats:'',kbo:0,tries:[]};window.__schedDbg=dbg;
+  const one=async([nm,p])=>{const r=await api(p),raw=A(r.games||r.scheduleGames||r),o=unique(raw),cats=[...new Set(raw.map(g=>V(g,'categoryId')))].slice(0,4).join('/');return{nm,raw,o,cats,txt:nm+' '+raw.length+'→'+o.length+(cats?'('+cats+')':'')}};
+  const f=await one(tries[0]);dbg.raw=f.raw.length;dbg.cats=f.cats;dbg.tries.push(f.txt);
+  if(f.o.length){dbg.kbo=f.o.length;dbg.used=f.nm;return f.o}
+  const rest=await Promise.allSettled(tries.slice(1).map(one));let out=[];
+  rest.forEach((x,k)=>{if(x.status==='fulfilled'){dbg.tries.push(x.value.txt);if(!out.length&&x.value.o.length){out=x.value.o;dbg.used=x.value.nm}}else dbg.tries.push(tries[k+1][0]+' 실패')});
+  dbg.kbo=out.length;return out}
 let loadToken=0,detailToken=0;
 function commitHTML(el,html){
   if(!el)return;
@@ -242,7 +251,7 @@ async function loadDate(d,btn){
   if(firstLoad && !$('#games').querySelector('.gamecard')) $('#games').innerHTML='<div class="card empty loading">경기 불러오는 중…</div>';
   const token=++loadToken;
   try{
-    const fresh=await fetchSchedule(d,d);
+    const fresh=await withPinned(await fetchSchedule(d,d),d);
     if(token!==loadToken)return;
     const previousSelected=selectedId;
     todayGames=fresh;
@@ -283,7 +292,7 @@ async function loadDetail(id){
   const token=++detailToken;
   const hasDetail=!!$('#selectedDetail').querySelector('.detailgrid');
   
-  try{let [relayRaw,g0,dm]=await Promise.all([api(`/schedule/games/${encodeURIComponent(id)}/relay`),api(`/schedule/games/${encodeURIComponent(id)}`),fetch('/api/daum?gameId='+encodeURIComponent(id),{cache:'no-store',signal:AbortSignal.timeout(2500)}).then(x=>x.ok?x.json():null).catch(()=>null)]);if(token!==detailToken||String(id)!==String(selectedId))return;let r=unwrapRelay(relayRaw),g=g0.game||g0.scheduleGame||g0,c=stateFromRelay(r),away=V(g,'awayTeamName')||'원정',home=V(g,'homeTeamName')||'홈',si=status(g),as=stat(g,r,'away'),hs=stat(g,r,'home'),ing=V(r,'inn','currentInning')??V(g,'currentInning'),half=String(V(c,'homeOrAway')??V(r,'homeOrAway')??''),inning=ing?fixInn(ing,half):'';let ab=V(r,'awayLineup','awayEntry')||{},hb=V(r,'homeLineup','homeEntry')||{},al=playerList(V(ab,'batter','batters','players')),hl=playerList(V(hb,'batter','batters','players')),ap=playerList(V(ab,'pitcher','pitchers','players')),hp=playerList(V(hb,'pitcher','pitchers','players')),aid=V(c,'batter','batterId','currentBatter'),pid=V(c,'pitcher','pitcherId','currentPitcher'),br0=latestBatterRecord(r),br=(br0&&String(pcode(br0)??aid)===String(aid))?br0:null,batter=Object.assign({},find(String(half)==='0'?al:hl,aid)||{},br||{}),pitch=Object.assign({},find(String(half)==='0'?hp:ap,pid)||{}),pls=[ap,hp];
+  try{let [relayRaw,g0,dm]=await Promise.all([api(`/schedule/games/${encodeURIComponent(id)}/relay`),api(`/schedule/games/${encodeURIComponent(id)}`),fetch('/api/daum?gameId='+encodeURIComponent(/^20\d{6}/.test(id)?id:selectedDate.slice(0,4)+String(id).slice(4)),{cache:'no-store',signal:AbortSignal.timeout(2500)}).then(x=>x.ok?x.json():null).catch(()=>null)]);if(token!==detailToken||String(id)!==String(selectedId))return;let r=unwrapRelay(relayRaw),g=g0.game||g0.scheduleGame||g0,c=stateFromRelay(r),away=V(g,'awayTeamName')||'원정',home=V(g,'homeTeamName')||'홈',si=status(g),as=stat(g,r,'away'),hs=stat(g,r,'home'),ing=V(r,'inn','currentInning')??V(g,'currentInning'),half=String(V(c,'homeOrAway')??V(r,'homeOrAway')??''),inning=ing?fixInn(ing,half):'';let ab=V(r,'awayLineup','awayEntry')||{},hb=V(r,'homeLineup','homeEntry')||{},al=playerList(V(ab,'batter','batters','players')),hl=playerList(V(hb,'batter','batters','players')),ap=playerList(V(ab,'pitcher','pitchers','players')),hp=playerList(V(hb,'pitcher','pitchers','players')),aid=V(c,'batter','batterId','currentBatter'),pid=V(c,'pitcher','pitcherId','currentPitcher'),br0=latestBatterRecord(r),br=(br0&&String(pcode(br0)??aid)===String(aid))?br0:null,batter=Object.assign({},find(String(half)==='0'?al:hl,aid)||{},br||{}),pitch=Object.assign({},find(String(half)==='0'?hp:ap,pid)||{}),pls=[ap,hp];
 let c2=c;if(dm&&dm.G_ID&&dm.batterInfo&&dm.pitcherInfo){let D=dm,tb=D.tbSc==='T';half=tb?'0':'1';inning=D.innNo+'회'+(tb?'초':'말');ing=D.innNo;c=Object.assign({},c,{ball:D.ball,strike:D.strike,out:D.out,awayScore:D.away?.run,homeScore:D.home?.run,homeOrAway:half});c2=Object.assign({},c,{base1:D.b1,base2:D.b2,base3:D.b3});batter=Object.assign({},batter,{name:D.batterInfo.pNm});pitch=Object.assign({},pitch,{name:D.pitcherInfo.pNm,pitchCount:D.pitcherInfo.pitAllCn});}
 let pk=playInn,rP=r,cur=parseInt(ing)||1,rl=n=>api(`/schedule/games/${encodeURIComponent(id)}/relay?inning=${n}`);
 try{if(pk==='score'){let rs=await Promise.all(Array.from({length:cur},(_,i)=>rl(i+1).then(unwrapRelay).catch(()=>null)));rP={textRelays:rs.flatMap(x=>x?A(V(x,'textRelays','relays')):[])}}else if(pk!=null&&Number(pk)!==cur){rP=unwrapRelay(await rl(pk))}}catch(e){rP=r}
@@ -889,6 +898,11 @@ const _lr=loadRank;loadRank=async function(){await _lr();badge();sync()};
 sync(true);setInterval(()=>{if(!document.hidden)sync()},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
 })();
+</script>
+<script id="v66-watchdog">
+/* 응답이 오래 없으면 '불러오는 중'에 갇혀 있지 않게 원인을 보여줍니다 */
+setTimeout(()=>{const l=document.querySelector('#games .loading');if(!l)return;const d=window.__schedDbg,lg=(window.__apiLog||[]).slice(-4).join('<br>');
+ l.classList.remove('loading');l.innerHTML='경기 데이터 응답이 늦어요.<br><small>'+(d&&d.tries&&d.tries.length?'(진단: '+d.tries.join(' · ')+')<br>':'')+(lg||'서버 응답이 없어요')+'</small><br><button class="glass-btn" onclick="location.reload()">다시 시도</button>'},window.__W||20000);
 </script>
 <script id="v57-js">
 /* 실제 핸드폰 푸시 알림: 서비스 워커(sw.js) + 푸시 구독 → /api/push-subscribe, 서버(/api/push-cron)가 경기 이벤트를 보냄 */
