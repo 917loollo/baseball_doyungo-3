@@ -195,10 +195,19 @@ function setClock(){let d=new Date(),s=new Intl.DateTimeFormat('ko-KR',{timeZone
 function makeDays(){let d=new Date((selectedDate||today())+'T12:00:00');let arr=[];for(let i=-1;i<6;i++){let x=new Date(d);x.setDate(d.getDate()+i);let y=x.getFullYear(),m=String(x.getMonth()+1).padStart(2,'0'),da=String(x.getDate()).padStart(2,'0');let ds=`${y}-${m}-${da}`,w=['일','월','화','수','목','금','토'][x.getDay()];arr.push([ds,`${Number(m)}.${Number(da)} (${w})`])}$('#days').innerHTML='<button class="arrow" onclick="shiftDays(-1)">‹</button>'+arr.map(x=>`<button class="${x[0]===selectedDate?'on':''}" data-date="${x[0]}" onclick="loadDate('${x[0]}',this)">${x[1]}</button>`).join('')+'<button class="arrow" onclick="shiftDays(1)">›</button>'}
 let dateOffset=0;function shiftDays(n){let base=new Date(selectedDate+'T12:00:00');base.setDate(base.getDate()+n);selectedDate=base.toISOString().slice(0,10);localStorage.setItem('kbo_selected_date',selectedDate);makeDays();loadDate(selectedDate)}
 async function fetchSchedule(from,to){
-  const base=`/schedule/games?upperCategoryId=kbaseball&fromDate=${from}&toDate=${to}`;
-  const r=await api(base),raw=A(r.games||r.scheduleGames||r);let out=unique(raw);
-  window.__schedDbg={raw:raw.length,cats:[...new Set(raw.map(g=>V(g,'categoryId')))].slice(0,6).join(','),kbo:out.length};
-  if(!out.length){try{const r2=await api(base+'&categoryId=kbo'),raw2=A(r2.games||r2.scheduleGames||r2),o2=unique(raw2);window.__schedDbg.retry=raw2.length;if(o2.length)out=o2}catch(e){}}
+  const rng=`fromDate=${from}&toDate=${to}`;
+  const tries=[['기본',`/schedule/games?upperCategoryId=kbaseball&${rng}`],
+    ['kbo지정',`/schedule/games?upperCategoryId=kbaseball&categoryId=kbo&${rng}`],
+    ['필드+500',`/schedule/games?fields=basic,schedule,baseball&upperCategoryId=kbaseball&categoryId=kbo&${rng}&size=500`],
+    ['상위없음',`/schedule/games?categoryId=kbo&${rng}`]];
+  let out=[];const dbg={raw:0,cats:'',kbo:0,tries:[]};window.__schedDbg=dbg;
+  for(const [nm,p] of tries){
+    try{const r=await api(p),raw=A(r.games||r.scheduleGames||r),o=unique(raw);
+      const cats=[...new Set(raw.map(g=>V(g,'categoryId')))].slice(0,4).join('/');
+      dbg.tries.push(nm+' '+raw.length+'→'+o.length+(cats?'('+cats+')':''));
+      if(nm==='기본'){dbg.raw=raw.length;dbg.cats=cats}
+      if(o.length){out=o;dbg.kbo=o.length;dbg.used=nm;break}
+    }catch(e){dbg.tries.push(nm+' 실패');if(nm==='기본'&&!out.length&&String(e.message).match(/서버|연결|timeout|fetch/i)){throw e}}}
   return out}
 let loadToken=0,detailToken=0;
 function commitHTML(el,html){
@@ -214,7 +223,7 @@ function patchGameCards(list){
   const existing=[...wrap.querySelectorAll('[data-game-id]')];
   const incoming=list.map(g=>String(g.gameId));
   const sameOrder=existing.length===incoming.length&&existing.every((el,i)=>el.dataset.gameId===incoming[i]);
-  if(!list.length){ if(!wrap.querySelector('.empty:not(.loading)')) commitHTML(wrap,'<div class="card empty">해당 날짜에 예정된 경기가 없습니다.<br><small>위의 날짜를 눌러 다른 날 경기를 확인해 보세요.</small>'+(window.__schedDbg?'<br><small>(진단: 서버 응답 '+window.__schedDbg.raw+'경기 · 분류값 '+(window.__schedDbg.cats||'없음')+' · KBO '+window.__schedDbg.kbo+(window.__schedDbg.retry!==undefined?' · 재조회 '+window.__schedDbg.retry:'')+')</small>':'')+'</div>'); return; }
+  if(!list.length){ if(!wrap.querySelector('.empty:not(.loading)')) commitHTML(wrap,'<div class="card empty">해당 날짜에 예정된 경기가 없습니다.<br><small>위의 날짜를 눌러 다른 날 경기를 확인해 보세요.</small>'+(window.__schedDbg?'<br><small>(진단: '+(window.__schedDbg.tries||[]).join(' · ')+')</small>':'')+'</div>'); return; }
   if(!sameOrder){ commitHTML(wrap,list.map(g=>gameCard(g,String(g.gameId)===String(selectedId))).join('')); return; }
   list.forEach(g=>{
     const el=wrap.querySelector(`[data-game-id="${CSS.escape(String(g.gameId))}"]`);

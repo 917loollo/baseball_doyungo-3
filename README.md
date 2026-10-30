@@ -1,10 +1,58 @@
-# KBO-LIVE Vercel v12
+# DOYUNGO LIVE (KBO 실시간 경기 앱)
 
-- 선수 얼굴/프로필 사진 제거
-- 현재 타석의 1·2·3루/홈을 실제 야구장 형태에 가깝게 개선
-- 현재 수비팀의 9개 수비 위치를 그라운드에 표시
-- 기존 네이버 스포츠 relay 래퍼(result.textRelayData) 처리 유지
-- 5초 자동 새로고침 시 기존 화면 유지
+네이버 스포츠 데이터를 이용한 KBO 실시간 스코어/중계/순위/AI/날씨 PWA. Vercel + GitHub 로 배포합니다. 현재 **v65**.
+
+## 1. 주요 기능
+- **실시간 경기**: 스코어, 이닝, 투구 존(Daum 좌표), 베이스/수비 위치, 라인업, 중계 텍스트, 이닝별 탭, 점수 변화 강조·진동
+- **전체 경기 / 팀 순위 / MY 팀**: 날짜 이동, 팀 필터, 순위(승차·최근5·연속·득실·피타고리안·홈/원정), 공식 순위 동기화
+- **경기 인사이트**: 승리 확률, 맞대결, 최근 10경기·연속, 홈/원정 기록, 라이브 승리 확률 그래프, 지금 가장 치열한 경기 추천
+- **경기 도구**: 시작 카운트다운, 경기장 날씨, 승패마진 추이, 캘린더(.ics) 추가, 링크 복사, 탭 제목에 라이브 점수
+- **나의 야구 기록**: 승부 예측 적중률, 직관 기록/직관 승률 (기기 안에만 저장)
+- **D.V. AI**: Groq 기반 스트리밍 채팅, 마크다운·표·코드·LaTeX 수식, 현재 경기/MY 팀 컨텍스트
+- **날씨(weather.html)**: Open-Meteo 기반 현재/시간별/7일 예보, 9개 구장 날씨·우천 경고
+- **알림**: 앱 안 알림 + 실제 핸드폰 푸시(30분 전/시작/득점/종료)
+- **PWA**: 홈 화면 앱, 자동 갱신(3/5/10/30초/끔), 다크 모드, 사실적인 야구공 아이콘
+- **진단(diag.html)**: API·배포·라인업 구조·푸시 설정 점검
+
+## 2. 파일 구성 (모두 같은 저장소 루트에 올리세요)
+- `index.html` 앱 본체 · `weather.html` 날씨 · `diag.html` 진단 · `sw.js` 서비스 워커 · `manifest.json` · `package.json` · `vercel.json`
+- `push.js` 푸시 공용 코드 (index.html 과 같은 위치)
+- `icon-192.png` `icon-512.png` `icon-1024.png` `apple-touch-icon.png`
+- `api/kbo.js`(네이버 일정 중계) `api/doyungo.js`(별칭) `api/daum.js`(Daum 스코어보드/투구) `api/ai.js`(Groq) `api/player-image.js`(선수 사진) `api/rank.js`(공식 순위) `api/push-config.js` `api/push-keys.js` `api/push-subscribe.js` `api/push-cron.js`
+- `naver-proxy-worker.js` 선택: Cloudflare Worker 중계 (Vercel→네이버가 막힐 때)
+- 선택: `logo-live.(png|webp|svg|jpg)`, `logo-idle.(png|webp|svg|jpg)` 헤더 로고 자동 전환
+
+> 배포할 때는 **항상 전체 파일을 올리세요.** `api/` 폴더나 `vercel.json` 이 빠지면 404 로 "불러오는 중"에서 멈춥니다.
+
+## 3. 배포 / 환경변수
+- Vercel 에 GitHub 저장소 연결 → 푸시하면 자동 배포
+- `GROQ_API_KEY` : D.V. AI 용 키 (**코드에 넣지 말고 환경변수로만**, 노출된 키는 폐기 후 재발급)
+- `vercel.json` 에서 함수 지역을 서울(`icn1`)로 지정 (네이버 해외 IP 차단 대응)
+
+## 4. 핸드폰 푸시 알림 설정 (한 번만)
+1. Vercel → Storage 에서 Upstash Redis(또는 KV)를 만들어 프로젝트에 연결 → `UPSTASH_REDIS_REST_URL` / `TOKEN` 자동 추가
+2. `사이트주소/api/push-keys` 를 열어 나온 `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` 를 환경변수로 추가
+3. `VAPID_SUBJECT`(mailto:내이메일), `CRON_SECRET`(길고 비밀인 문자열) 추가 후 재배포
+4. cron-job.org(무료)에서 1분마다 `사이트주소/api/push-cron?key=CRON_SECRET` 호출 등록 (Vercel 무료는 크론이 하루 1회라 외부 크론 필요)
+5. 아이폰: Safari → 공유 → 홈 화면에 추가 → 그 앱에서 🔔 알림 켬 → 📲 테스트
+- 푸시 알림은 서버가 네이버에서 경기를 읽어야 동작합니다 (네이버 연결 문제가 있으면 알림도 영향을 받습니다)
+
+## 5. 진짜 iOS 앱 (선택, Liquid Glass 탭바)
+- `DoyungoLive_iOS.zip` : SwiftUI `TabView` + `WKWebView` 로 웹앱을 감싸는 소스 3개. 맥+Xcode 필요, 최신 Xcode 로 빌드하면 하단 탭바가 진짜 Liquid Glass. 자세한 방법은 `README-iOS.md`
+- 앱 안에서는 웹 푸시가 동작하지 않음 (APNs 별도 필요). 컴파일은 확인하지 못했음
+
+## 6. 문제 해결
+- **"경기 불러오는 중…"에서 멈춤**: `사이트주소/diag.html` 확인. `api/` 폴더 누락 여부부터 점검
+- **경기 없음 화면의 `(진단: …)`**: 서버가 받은 경기 수와 분류값. 포스트시즌이 안 나올 때 이 한 줄을 확인
+- **`KBO 데이터 서버 연결 실패`**: Vercel→네이버 연결 문제. 지역 icn1 적용 확인 → 폰 직접 조회 폴백 → `naver-proxy-worker.js` 를 Cloudflare 에 올리고 `사이트주소/?proxy=https://이름.workers.dev` 로 한 번 접속
+- **푸시가 안 옴**: `diag.html` 의 "핸드폰 푸시 알림 설정" 항목, 아이폰은 홈 화면 앱에서만 가능
+
+## 7. 확인되지 않은 부분 (실제 서버/기기에서 검증 필요)
+- 네이버·KBO 공식 순위 파싱, 포스트시즌 경기 분류값, 폰 직접 조회(CORS) 성공 여부
+- 푸시 알림 전체 흐름 (Redis/VAPID/크론 설정 후), iOS 26/27 Safari 의 글래스 렌더링 세부
+- 라인업 필드명·구장 이름 매칭은 휴리스틱
+
+## 8. 전체 업데이트 내역
 - v13: 깨진 필드 화면을 투구 존 + 스코어 오버레이(Daum 스포츠 스타일)로 교체, 현재 타자·투수를 currentGameState 기준으로 재계산
 - v14: Daum 게임센터(sports2i) 스코어보드 연동(api/daum.js) — 타자·투수·볼카운트·점수·마지막 투구를 Daum 값 우선 사용, 실패 시 네이버 값으로 자동 대체
 - v15: 선수 이름 옆 빈 원(사진 자리) 제거
@@ -12,17 +60,6 @@
 - v17: Daum graphic-Live 연동 — 투구 위치(번호 원)를 Daum 좌표로 표시, 색상 Daum 규칙(볼 초록·타격 파랑·그 외 주황)
 - v18: 베이스 위 선수 이름을 베이스 옆에 크게 표시
 - v19: 실시간 중계에 득점·1회~9회 이닝 탭 추가 (relay?inning=N 호출)
-
-Vercel에 기존 프로젝트 파일을 교체해 배포하세요.
-
-
-## D.V. AI setup
-The KBO AI screen uses `/api/ai` so the Groq API key is never exposed in browser JavaScript.
-Before deploying to Vercel, add an environment variable named `GROQ_API_KEY` containing your own server-side key.
-Do not put the key in `index.html`. The key included in any previous public HTML should be revoked/rotated.
-
-AI features: current-game context, MY-team context, game-flow analysis, summary, viewing points, team comparison, and baseball-term explanations.
-
 - v20: 초기화·자동 새로고침(3/5/10/30초·끔) 복구, 다크 모드, 팀 필터, MY팀·즐겨찾기 경기 알림(득점/시작/종료), 경기 인사이트(승리 확률·상대전적·최근 흐름·공유), 순위 상세 기록(승차·최근5·연속·득실·피타고리안·홈/원정), MY 팀 대시보드, D.V. AI 실제 경기·순위 컨텍스트 + 대화 기억 + 추천 질문
 - v21: D.V. AI 채팅 — 실시간 스트리밍, ChatGPT식 마크다운(제목·목록·표·코드블록 복사·인용·링크), 중지/다시 생성/답변 복사. 키는 반드시 Vercel 환경변수 GROQ_API_KEY 로만 설정
 - v22: LaTeX 수식($..$, $$..$$, \(..\), \[..\]) KaTeX 렌더링. api/ai.js 에 키 폴백 포함 — 저장소를 공개하지 마세요
@@ -61,14 +98,6 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v55: 날씨 페이지 이름을 Weather 로 변경
 - v56: 선수 사진 w150 우선 조회(요청 수 절감), diag 오탐 정리
 - v57: KBO 공식 기록실 순위 동기화, 실제 핸드폰 푸시 알림(sw.js, api/push-*), 사실적인 야구공 앱 아이콘
-
-## 핸드폰 푸시 알림 설정 (한 번만)
-1. Vercel → Storage 에서 Upstash Redis(또는 KV)를 만들어 프로젝트에 연결 → UPSTASH_REDIS_REST_URL / TOKEN 이 자동 추가됩니다.
-2. 사이트주소/api/push-keys 를 열어 나온 VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY 를 환경변수로 추가합니다.
-3. 환경변수 VAPID_SUBJECT = mailto:내이메일, CRON_SECRET = 길고 아무도 모르는 문자열 을 추가하고 재배포합니다.
-4. cron-job.org(무료)에서 1분마다 사이트주소/api/push-cron?key=CRON_SECRET 을 호출하도록 등록합니다. (경기 시간대만 켜 두면 됩니다)
-5. 아이폰: Safari → 공유 → 홈 화면에 추가 → 그 앱을 열어 🔔 알림 켬 → 📲 테스트.
-
 - v58: 하단 탭바 뒤 네모난 블러 블록 제거(래퍼 backdrop-filter 해제), iOS 26/27식 리퀴드 글래스(림 라이트·하이라이트), 갱신 간격 메뉴를 같은 유리 스타일 팝오버로 교체
 - v59: 경기가 없는 날 '경기 불러오는 중…'에서 영원히 멈추던 버그 수정 (안내 문구 교체), diag 오탐 정리
 - v60: 포스트시즌 경기가 목록에서 걸러지던 문제 수정(categoryId 'kbo' 고정 → kbo* 또는 KBO 10개 구단 팀명으로 판별, 빈 결과 시 categoryId=kbo 재조회, 걸러진 경우 진단 문구 표시), push-cron 동일 적용
@@ -76,3 +105,4 @@ AI features: current-game context, MY-team context, game-flow analysis, summary,
 - v62: 경기 없음 화면에 서버 응답 진단 문구 항상 표시
 - v63: Vercel 함수 지역을 서울(icn1)로 지정(네이버 해외 IP 차단 대응), 연결 실패 원인 코드 표시
 - v64: 서버(Vercel)→네이버 연결 실패 시 폰에서 네이버 직접 조회 폴백, ?proxy=주소 로 중계 서버 지정 가능, naver-proxy-worker.js(Cloudflare Worker) 추가
+- v65: 경기 조회를 4가지 방식(기본/kbo지정/필드+500/상위없음)으로 순차 시도, 방식별 결과를 진단 문구로 표시 (포스트시즌 누락 대응)
