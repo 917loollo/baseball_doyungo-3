@@ -1,6 +1,6 @@
 # DOYUNGO LIVE (KBO 실시간 경기 앱)
 
-네이버 스포츠 데이터를 이용한 KBO 실시간 스코어/중계/순위/AI/날씨 PWA. Vercel + GitHub 로 배포합니다. 현재 **v67**.
+네이버 스포츠 데이터를 이용한 KBO 실시간 스코어/중계/순위/AI/날씨 PWA. Vercel + GitHub 로 배포합니다. 현재 **v69**.
 
 ## 1. 주요 기능
 - **실시간 경기**: 스코어, 이닝, 투구 존(Daum 좌표), 베이스/수비 위치, 라인업, 중계 텍스트, 이닝별 탭, 점수 변화 강조·진동
@@ -18,7 +18,7 @@
 - `index.html` 앱 본체 · `weather.html` 날씨 · `diag.html` 진단 · `sw.js` 서비스 워커 · `manifest.json` · `package.json` · `vercel.json`
 - `push.js` 푸시 공용 코드 (index.html 과 같은 위치)
 - `icon-192.png` `icon-512.png` `icon-1024.png` `apple-touch-icon.png`
-- `api/kbo.js`(네이버 일정 중계) `api/doyungo.js`(별칭) `api/daum.js`(Daum 스코어보드/투구) `api/ai.js`(Groq) `api/player-image.js`(선수 사진) `api/rank.js`(공식 순위) `api/push-config.js` `api/push-keys.js` `api/push-subscribe.js` `api/push-cron.js`
+- `api/kbo.js`(네이버 일정 중계) `api/doyungo.js`(별칭) `api/daum.js`(Daum 스코어보드/투구 · 정규시즌 전용) `api/daum-ps.js`(같은 기능 · 포스트시즌 전용) `api/ai.js`(Groq) `api/player-image.js`(선수 사진) `api/rank.js`(공식 순위) `api/push-config.js` `api/push-keys.js` `api/push-subscribe.js` `api/push-cron.js`
 - `naver-proxy-worker.js` 선택: Cloudflare Worker 중계 (Vercel→네이버가 막힐 때)
 - 선택: `logo-live.(png|webp|svg|jpg)`, `logo-idle.(png|webp|svg|jpg)` 헤더 로고 자동 전환
 
@@ -109,3 +109,5 @@
 - v65: 경기 조회를 4가지 방식(기본/kbo지정/필드+500/상위없음)으로 순차 시도, 방식별 결과를 진단 문구로 표시 (포스트시즌 누락 대응)
 - v66: '경기 불러오는 중…' 무한 대기 방지 — 요청별 시간 제한(서버 9초/폰 직접 6초), 추가 조회 방식 병렬 실행, 20초 넘으면 원인(요청 로그·진단)과 다시 시도 버튼 표시
 - v67: 포스트시즌 대응 — 목록에 없는 경기를 ID로 직접 추가(?game=ID), 포스트시즌 경기 ID(5555MMDD…)를 Daum 형식(2026MMDD…)으로 변환, Daum 스코어보드 시리즈 코드(SR_ID) 후보 자동 시도(추정값)
+- v68: Daum 스코어보드/투구 위치를 정규시즌(api/daum.js, 원래 방식 복원)과 포스트시즌(api/daum-ps.js, 신규)으로 분리. 포스트시즌 ID(5555MMDD…)에서 시리즈 코드(5)와 날짜를 읽어 Daum 형식(20261030SSHT0, SR_ID 5)으로 조회. 앱은 ID 형식을 보고 알맞은 쪽을 호출
+- v69: Daum 포스트시즌 경기 ID 를 실제 Daum 응답(cpGameId 55551101HTSS0|2026)에 맞춰 5555MMDD… 형식 그대로 사용(날짜 형식은 대비용 후보), v68 의 변환은 오류였음

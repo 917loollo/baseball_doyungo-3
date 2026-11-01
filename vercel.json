@@ -32,6 +32,9 @@
     },
     "api/push-cron.js": {
       "maxDuration": 30
+    },
+    "api/daum-ps.js": {
+      "maxDuration": 10
     }
   },
   "headers": [
