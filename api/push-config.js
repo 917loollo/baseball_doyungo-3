@@ -1,4 +1,4 @@
-const { hasRedis } = require('../lib/push.js');
+const { hasRedis } = require('../push.js');
 module.exports = (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   const publicKey = process.env.VAPID_PUBLIC_KEY || null;

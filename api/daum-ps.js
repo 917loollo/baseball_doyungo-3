@@ -1,8 +1,8 @@
 // Daum 스포츠(게임센터, sports2i) 프록시 — 포스트시즌 전용
-// 실제 Daum 응답(SPORTS_GAME)의 cpGameId 가 '55551101HTSS0|2026' 형식이라서(확인됨),
-// 포스트시즌 경기 ID 는 네이버 ID 앞 13자리('5555'+MMDD+팀코드+0)를 그대로 G_ID 로 씁니다.
-// 앞 4자리는 시리즈 코드를 4번 반복한 값(5555=플레이오프 — Daum gameDetailTypeId 106 와 일치). 다른 값(3333,4444,7777)은 추정입니다.
-// 그대로 안 되면 '연도MMDD…' 형태도 함께 시도합니다.
+// 실제 Daum 페이지(경기 중 HAR)가 호출하는 주소로 확인됨:
+//   graphic-scoreboard/1/5/20261101HTSS0/999  ,  graphic-Live?...SR_ID=5&G_ID=20261101HTSS0...
+// 즉 G_ID 는 '연도MMDD+팀코드+0', SR_ID 는 시리즈 코드(플레이오프=5). 네이버 ID '5555MMDD…' 의 앞 4자리가 시리즈 코드(5)를 4번 반복한 값입니다.
+// (Daum 의 cpGameId '55551101HTSS0' 는 game-type 조회용 키이며 스코어보드 G_ID 가 아님.) 3333/4444/7777 은 추정이라 실패 시 다른 코드도 시도합니다.
 const BASE = 'https://gamecenter-api.sports2i.com/api/v2';
 const HDR = {
   Accept: 'application/json, text/plain, */*',
@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
   const year = /^20\d\d$/.test(prefix) ? prefix : (yy || String(req.query?.year || '') || new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 4));
   const gidRaw = prefix + mmdd + teams + dh;            // 55551101HTSS0 (Daum cpGameId 형식)
   const gidDate = year + mmdd + teams + dh;             // 20261101HTSS0 (대비용)
-  const gids = [...new Set([gidRaw, gidDate])];
+  const gids = [...new Set([gidDate, gidRaw])];
   const first = /^(\d)\1{3}$/.test(prefix) ? Number(prefix[0]) : null;           // 5555 → 5
   const srs = [...new Set([first, 5, 7, 3, 4, 9].filter(x => x !== null))];        // 시리즈 코드 후보
   res.setHeader('Cache-Control', 'no-store');
@@ -29,10 +29,10 @@ module.exports = async (req, res) => {
     return j && typeof j === 'object' ? { gid, sr, sb: j } : null;
   };
   try {
-    let hit = first !== null ? await get(gidRaw, first).catch(() => null) : null;       // 가장 유력한 조합 먼저
+    let hit = first !== null ? await get(gidDate, first).catch(() => null) : null;      // 확인된 조합(날짜형 ID + 시리즈 코드) 먼저
     if (!hit) {
       const combos = [];
-      for (const g of gids) for (const s of srs) if (!(g === gidRaw && s === first)) combos.push([g, s]);
+      for (const g of gids) for (const s of srs) if (!(g === gidDate && s === first)) combos.push([g, s]);
       hit = (await Promise.all(combos.map(([g, s]) => get(g, s).catch(() => null)))).find(Boolean) || null;
     }
     if (!hit) return res.status(404).json({ error: '포스트시즌 scoreboard 없음', tried: { gids, srs } });

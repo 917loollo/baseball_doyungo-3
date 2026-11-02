@@ -1,5 +1,5 @@
 // 1분마다(또는 30초마다) 호출: 오늘 경기를 읽어 시작/득점/종료/30분 전 이벤트를 찾아 구독자에게 푸시를 보냅니다.
-const { R, vapid } = require('../lib/push.js');
+const { R, vapid } = require('../push.js');
 const TEAMS = ['LG', '두산', '삼성', 'SSG', 'KT', '한화', '롯데', 'KIA', 'NC', '키움'];
 const short = n => TEAMS.find(t => String(n).includes(t)) || String(n || '');
 const lk = o => { const m = {}; for (const k in o) m[k.toLowerCase()] = o[k]; return m; };
@@ -12,7 +12,7 @@ function parse(g) {
   const ds = String(pick(m, 'gameDateTime', 'startTime') || '');
   return { id: String(pick(m, 'gameId')), a: short(pick(m, 'awayTeamName', 'awayName')), h: short(pick(m, 'homeTeamName', 'homeName')), st,
     as: n(pick(m, 'awayTeamScore', 'awayScore')), hs: n(pick(m, 'homeTeamScore', 'homeScore')), inn: String(pick(m, 'currentInning') || ''),
-    start: ds.length >= 16 ? new Date(ds.slice(0, 19) + '+09:00').getTime() : 0, ok: pick(m, 'categoryId') === 'kbo' };
+    start: ds.length >= 16 ? new Date(ds.slice(0, 19) + '+09:00').getTime() : 0, ok: /^kbo/i.test(String(pick(m, 'categoryId') || '')) || (TEAMS.some(x => String(pick(m, 'awayTeamName', 'awayName')).includes(x)) && TEAMS.some(x => String(pick(m, 'homeTeamName', 'homeName')).includes(x))) };
 }
 function events(prev, g) {
   const out = [], line = `${g.a} ${g.as} : ${g.hs} ${g.h}`, tag = 'g' + g.id;

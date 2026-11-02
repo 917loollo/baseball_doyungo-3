@@ -17,7 +17,7 @@ async function pull(path) {
       const body = await r.text();
       if (!body.trim().startsWith('<')) { try { JSON.parse(body); return { status: r.status, body }; } catch (e) {} }
       err = `네이버 응답이 JSON이 아닙니다 (HTTP ${r.status})`;
-    } catch (e) { err = String(e?.message || e); }
+    } catch (e) { err = String(e?.message || e) + (e?.cause ? ' [' + (e.cause.code || e.cause.message || e.cause) + ']' : ''); }
   }
   throw new Error(err);
 }
